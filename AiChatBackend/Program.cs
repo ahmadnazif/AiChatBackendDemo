@@ -1,3 +1,4 @@
+global using System.Text.Json;
 using Microsoft.Extensions.AI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +10,7 @@ builder.Services.AddChatClient(x =>
     var endpoint = config[$"{ollama}:Endpoint"];
     var model = config[$"{ollama}:Model"];
 
-    return new OllamaChatClient(endpoint, "llama3");
+    return new OllamaChatClient(endpoint, model);
 });
 
 builder.Services.AddControllers();
