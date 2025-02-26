@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Hubs;
 
@@ -12,6 +13,36 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
     private readonly IHubUserCache cache = cache;
 
     public async Task ReceiveAsync(ChatHubChatRequest req)
+    {
+        var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
+        if (username == null)
+            logger.LogWarning($"Username {username} not found in cache");
+        else
+        {
+            logger.LogInformation($"Prompt: {req.Message}");
+            List<ChatMessage> msg = [];
+            msg.Add(new(ChatRole.User, req.Message));
+
+            Stopwatch sw = Stopwatch.StartNew();
+            var resp = await client.GetResponseAsync(msg);
+            sw.Stop();
+
+            ChatHubChatResponse r = new()
+            {
+                Username = username,
+                ConnectionId = Context.ConnectionId,
+                RequestMessage = req.Message,
+                ResponseMessage = resp.Message.Text,
+                Duration = sw.Elapsed,
+                ModelId = resp.ModelId
+            };
+
+            await Clients.User(username).SendAsync("OnReceived", r);
+            logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role} Duration: {sw.Elapsed}");
+        }
+    }
+
+    public async Task ReceiveMultiAsync(ChatHubChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
         if (username == null)
