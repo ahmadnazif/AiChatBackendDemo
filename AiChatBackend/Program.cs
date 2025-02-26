@@ -1,4 +1,6 @@
 global using System.Text.Json;
+global using AiChatBackend.Enums;
+global using AiChatBackend.Models;
 using Microsoft.Extensions.AI;
 
 var builder = WebApplication.CreateBuilder(args);
