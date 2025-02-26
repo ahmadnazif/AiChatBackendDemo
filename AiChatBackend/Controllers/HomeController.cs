@@ -3,8 +3,8 @@
 namespace AiChatBackend.Controllers;
 
 [ApiExplorerSettings(IgnoreApi = true)]
-[ApiController]
 [Route("/")]
+[ApiController]
 public class HomeController : ControllerBase
 {
     [HttpGet]

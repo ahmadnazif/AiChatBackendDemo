@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Controllers;
 
-[Route("api/chat")]
+[Route("rest-api/chat")]
 [ApiController]
 public class ChatController(IChatClient chatClient, ILogger<ChatController> logger) : ControllerBase
 {
