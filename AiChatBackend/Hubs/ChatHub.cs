@@ -1,6 +1,7 @@
 ﻿using AiChatBackend.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
+using System.Diagnostics;
 
 namespace AiChatBackend.Hubs;
 
@@ -19,13 +20,16 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
         {
             List<ChatMessage> msg = [];
             msg.Add(new(ChatRole.User, req.Message));
+
+            Stopwatch sw = Stopwatch.StartNew();
             //var cresp = await chatClient.GetResponseAsync(msg);
+            sw.Stop();
 
             ChatHubChatResponse resp = new()
             {
                 RequestMessage = req.Message,
                 ResponseMessage = DateTime.Now.ToString(), //cresp.Message.Text,
-                Duration = TimeSpan.Zero
+                Duration = sw.Elapsed
             };
 
             await Clients.User(username).SendAsync("Receive", resp);
