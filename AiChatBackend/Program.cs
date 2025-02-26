@@ -36,6 +36,8 @@ builder.WebHost.ConfigureKestrel(x =>
 
 var app = builder.Build();
 
+app.UseCors();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 

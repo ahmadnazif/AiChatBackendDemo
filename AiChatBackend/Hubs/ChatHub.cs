@@ -18,21 +18,25 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
             logger.LogWarning($"Username {username} not found in cache");
         else
         {
+            logger.LogInformation(JsonSerializer.Serialize(req));
             List<ChatMessage> msg = [];
             msg.Add(new(ChatRole.User, req.Message));
 
             Stopwatch sw = Stopwatch.StartNew();
-            //var cresp = await chatClient.GetResponseAsync(msg);
+            var resp = await chatClient.GetResponseAsync(msg);
             sw.Stop();
 
-            ChatHubChatResponse resp = new()
+            ChatHubChatResponse r = new()
             {
+                Username = username,
+                ConnectionId = Context.ConnectionId,
                 RequestMessage = req.Message,
-                ResponseMessage = DateTime.Now.ToString(), //cresp.Message.Text,
-                Duration = sw.Elapsed
+                ResponseMessage = resp.Message.Text,
+                Duration = sw.Elapsed,
+                ModelId = resp.ModelId
             };
 
-            await Clients.User(username).SendAsync("OnReceived", resp);
+            await Clients.User(username).SendAsync("OnReceived", r);
         }
     }
 
