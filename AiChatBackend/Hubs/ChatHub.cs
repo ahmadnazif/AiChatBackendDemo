@@ -13,7 +13,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserCa
 
     public async Task ReceiveMessageAsync(ChatHubChatRequest req)
     {
-        var username = user.FindUsername(Context.ConnectionId);
+        var username = user.FindUsernameByConnectionId(Context.ConnectionId);
         if (username == null)
             logger.LogWarning($"Username {username} not found in cache");
         else
