@@ -1,6 +1,6 @@
 ﻿namespace AiChatBackend.Models;
 
-public class ChatHubBatchChatRequest
+public class BatchChatRequest
 {
     public List<ChatRequest> Messages { get; set; }
 
