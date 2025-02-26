@@ -12,8 +12,8 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
     private readonly IChatClient chatClient = chatClient;
     private readonly ILogger<ChatController> logger = logger;
 
-    [HttpGet("send")]
-    public async Task<ActionResult<string>> Send([FromQuery] string prompt, CancellationToken ct)
+    [HttpPost("send")]
+    public async Task<ActionResult<string>> Send([FromBody] string prompt, CancellationToken ct)
     {
         try
         {
