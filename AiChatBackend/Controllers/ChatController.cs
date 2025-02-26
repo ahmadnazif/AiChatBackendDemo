@@ -12,12 +12,12 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
     private readonly ILogger<ChatController> logger = logger;
 
     [HttpGet("send")]
-    public async Task<ActionResult<string>> Send([FromQuery] string? prompt, CancellationToken ct)
+    public async Task<ActionResult<string>> Send([FromQuery] string prompt, CancellationToken ct)
     {
         try
         {
             List<ChatMessage> msg = [];
-            msg.Add(new ChatMessage(ChatRole.User, prompt));
+            msg.Add(new(ChatRole.User, prompt));
 
             Stopwatch sw = Stopwatch.StartNew();
             var resp = await chatClient.GetResponseAsync(msg, cancellationToken: ct);
