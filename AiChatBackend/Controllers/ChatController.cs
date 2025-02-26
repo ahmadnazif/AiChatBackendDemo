@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Controllers;
@@ -18,14 +19,31 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
             List<ChatMessage> msg = [];
             msg.Add(new ChatMessage(ChatRole.User, prompt));
 
+            Stopwatch sw = Stopwatch.StartNew();
             var resp = await chatClient.GetResponseAsync(msg, cancellationToken: ct);
-            logger.LogInformation(JsonSerializer.Serialize(resp));
+            sw.Stop();
+
+            Log(resp, sw.Elapsed);
             return resp.Message.Text;
         }
         catch (Exception ex)
         {
             return ex.Message;
         }
+    }
+
+    private void Log(ChatResponse resp, TimeSpan duration)
+    {
+        var r = new
+        {
+            ChoiceCount = resp.Choices.Count,
+            resp.ModelId,
+            resp.Usage.InputTokenCount,
+            resp.Usage.OutputTokenCount,
+            Duration = duration
+        };
+
+        logger.LogInformation(JsonSerializer.Serialize(r));
     }
 
     [HttpGet("stream")]
