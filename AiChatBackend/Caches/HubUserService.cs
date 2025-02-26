@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
-namespace AiChatBackend.Services;
+namespace AiChatBackend.Caches;
 
 public class HubUserService(ILogger<HubUserService> logger) : IHubUserService, IDisposable
 {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace AiChatBackend.Services;
+namespace AiChatBackend.Caches;
 
 public interface IHubUserService
 {
@@ -14,5 +14,4 @@ public interface IHubUserService
     string FindUsername(string connectionId);
     string FindConnectionId(string username);
     List<UserSession> ListAllActive();
-
 }

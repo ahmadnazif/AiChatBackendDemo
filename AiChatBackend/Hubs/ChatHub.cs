@@ -1,4 +1,4 @@
-﻿using AiChatBackend.Services;
+﻿using AiChatBackend.Caches;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
@@ -37,7 +37,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
             };
 
             await Clients.User(username).SendAsync("OnReceived", r);
-            logger.LogInformation($"Response generated & sent [{sw.Elapsed}]");
+            logger.LogInformation($"Response generated & sent [{sw.Elapsed}] {resp.Message.Role}");
         }
     }
 
