@@ -34,7 +34,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             var resp = await client.GetResponseAsync(msg);
             sw.Stop();
 
-            ChatHubChatResponse r = new()
+            OneChatResponse r = new()
             {
                 Username = username,
                 ConnectionId = Context.ConnectionId,
