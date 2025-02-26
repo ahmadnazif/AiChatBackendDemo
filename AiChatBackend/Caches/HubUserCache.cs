@@ -19,7 +19,8 @@ public interface IHubUserCache
 
 public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDisposable
 {
-    private ILogger<HubUserCache> logger = logger;
+    private readonly ILogger<HubUserCache> logger = logger;
+
     private List<UserSession> Users { get; set; } = [];
 
     public int CountAll() => Users.Count;
@@ -36,10 +37,7 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDispos
         };
     }
 
-    public bool IsActive(string connectionId)
-    {
-        return IsExist(connectionId, UserSessionKeyType.ConnectionId);
-    }
+    public bool IsActive(string connectionId) => IsExist(connectionId, UserSessionKeyType.ConnectionId);
 
     public UserSession Find(string key, UserSessionKeyType type)
     {
