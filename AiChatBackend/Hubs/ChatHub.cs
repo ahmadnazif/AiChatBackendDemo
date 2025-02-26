@@ -11,7 +11,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
     private readonly IChatClient client = client;
     private readonly IHubUserCache cache = cache;
 
-    public async Task ReceiveMessageAsync(ChatHubChatRequest req)
+    public async Task ReceiveAsync(ChatHubChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
         if (username == null)
