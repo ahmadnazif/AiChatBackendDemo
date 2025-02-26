@@ -46,6 +46,7 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
         logger.LogInformation(JsonSerializer.Serialize(r));
     }
 
+    [NonAction]
     [HttpGet("stream")]
     public async IAsyncEnumerable<ChatResponseUpdate> Stream([FromQuery] string? prompt, [EnumeratorCancellation] CancellationToken ct)
     {
@@ -57,6 +58,4 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
             yield return x;
         }
     }
-
-
 }
