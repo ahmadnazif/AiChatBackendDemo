@@ -18,7 +18,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
             logger.LogWarning($"Username {username} not found in cache");
         else
         {
-            logger.LogInformation(JsonSerializer.Serialize(req));
+            logger.LogInformation($"Prompt: {req.Message}");
             List<ChatMessage> msg = [];
             msg.Add(new(ChatRole.User, req.Message));
 
@@ -37,6 +37,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
             };
 
             await Clients.User(username).SendAsync("OnReceived", r);
+            logger.LogInformation($"Response generated & sent [{sw.Elapsed}]");
         }
     }
 
@@ -53,7 +54,9 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
         if (exception != null)
             logger.LogError(exception.Message);
 
-        user.Remove(Context.ConnectionId, UserSessionKeyType.ConnectionId);
+        var connectionId = Context.ConnectionId;
+        logger.LogInformation($"A client has been disconnected. Connection ID: {connectionId}");
+        user.Remove(connectionId, UserSessionKeyType.ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
     #endregion
