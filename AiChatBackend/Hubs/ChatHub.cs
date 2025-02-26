@@ -10,10 +10,22 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
     private readonly IChatClient chatClient = chatClient;
     private readonly IHubUserService user = user;
 
-    public async Task SendAsync(ChatArgsBase args)
+    public async Task SendAsync(ChatHubChatRequest req)
     {
         var username = user.FindUsername(Context.ConnectionId);
-        //await Clients.User(username).SendAsync("Receive", )
+        if (username == null)
+            logger.LogWarning($"Username {username} not found in cache");
+        else
+        {
+            ChatHubChatResponse resp = new()
+            {
+                RequestMessage = req.Message,
+                ResponseMessage = DateTime.Now.ToString(),
+                Duration = TimeSpan.Zero
+            };
+
+            await Clients.User(username).SendAsync("Receive", resp);
+        }
     }
 
     #region Override methods
