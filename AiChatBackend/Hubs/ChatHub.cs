@@ -17,10 +17,14 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
             logger.LogWarning($"Username {username} not found in cache");
         else
         {
+            List<ChatMessage> msg = [];
+            msg.Add(new(ChatRole.User, req.Message));
+            //var cresp = await chatClient.GetResponseAsync(msg);
+
             ChatHubChatResponse resp = new()
             {
                 RequestMessage = req.Message,
-                ResponseMessage = DateTime.Now.ToString(),
+                ResponseMessage = DateTime.Now.ToString(), //cresp.Message.Text,
                 Duration = TimeSpan.Zero
             };
 
@@ -41,6 +45,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
         if (exception != null)
             logger.LogError(exception.Message);
 
+        user.Remove(Context.ConnectionId, UserSessionKeyType.ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
     #endregion
