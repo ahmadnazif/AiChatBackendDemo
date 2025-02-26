@@ -5,9 +5,9 @@ namespace AiChatBackend.Controllers;
 
 [Route("rest-api/hub")]
 [ApiController]
-public class HubController(IHubUserService user) : ControllerBase
+public class HubController(IHubUserCache user) : ControllerBase
 {
-    private readonly IHubUserService user = user;
+    private readonly IHubUserCache user = user;
 
     [HttpGet("user/is-username-registered")]
     public ActionResult<bool> IsUsernameRegistered([FromQuery] string? username) => user.IsExist(username, UserSessionKeyType.Username);

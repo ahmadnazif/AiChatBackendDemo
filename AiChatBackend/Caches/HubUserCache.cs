@@ -3,7 +3,21 @@ using Microsoft.Extensions.Logging;
 
 namespace AiChatBackend.Caches;
 
-public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserService, IDisposable
+public interface IHubUserCache
+{
+    bool IsExist(string key, UserSessionKeyType type);
+    bool IsActive(string connectionId);
+    int CountAll();
+    ResponseBase Add(string connectionId, string username, bool force = false);
+    ResponseBase Add(HubCallerContext context, bool force = false);
+    void Remove(string key, UserSessionKeyType type);
+    UserSession Find(string key, UserSessionKeyType type);
+    string FindUsername(string connectionId);
+    string FindConnectionId(string username);
+    List<UserSession> ListAllActive();
+}
+
+public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDisposable
 {
     private ILogger<HubUserCache> logger = logger;
     private List<UserSession> Users { get; set; } = [];

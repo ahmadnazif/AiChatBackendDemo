@@ -5,11 +5,11 @@ using System.Diagnostics;
 
 namespace AiChatBackend.Hubs;
 
-public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserService user) : Hub
+public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserCache user) : Hub
 {
     private readonly ILogger<ChatHub> logger = logger;
     private readonly IChatClient chatClient = chatClient;
-    private readonly IHubUserService user = user;
+    private readonly IHubUserCache user = user;
 
     public async Task ReceiveMessageAsync(ChatHubChatRequest req)
     {
