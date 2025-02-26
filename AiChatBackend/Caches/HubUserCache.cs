@@ -3,9 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace AiChatBackend.Caches;
 
-public class HubUserService(ILogger<HubUserService> logger) : IHubUserService, IDisposable
+public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserService, IDisposable
 {
-    private ILogger<HubUserService> logger = logger;
+    private ILogger<HubUserCache> logger = logger;
     private List<UserSession> Users { get; set; } = [];
 
     public int CountAll() => Users.Count;
