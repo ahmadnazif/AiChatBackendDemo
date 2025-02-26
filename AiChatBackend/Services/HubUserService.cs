@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 namespace AiChatBackend.Services;
 
@@ -156,6 +157,13 @@ public class HubUserService(ILogger<HubUserService> logger) : IHubUserService, I
                 Message = $"Exception: {ex.Message}"
             };
         }
+    }
+
+    public ResponseBase Add(HubCallerContext context, bool force = false)
+    {
+        var id = context.ConnectionId;
+        var username = context.GetHttpContext().Request.Query["username"];
+        return Add(id, username, force);
     }
 
     public void Remove(string key, UserSessionKeyType type)

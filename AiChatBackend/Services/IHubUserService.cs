@@ -1,4 +1,6 @@
-﻿namespace AiChatBackend.Services;
+﻿using Microsoft.AspNetCore.SignalR;
+
+namespace AiChatBackend.Services;
 
 public interface IHubUserService
 {
@@ -6,6 +8,7 @@ public interface IHubUserService
     bool IsActive(string connectionId);
     int CountAll();
     ResponseBase Add(string connectionId, string username, bool force = false);
+    ResponseBase Add(HubCallerContext context, bool force = false);
     void Remove(string key, UserSessionKeyType type);
     UserSession Find(string key, UserSessionKeyType type);
     string FindUsername(string connectionId);
