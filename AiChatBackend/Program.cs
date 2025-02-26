@@ -1,6 +1,9 @@
 global using System.Text.Json;
 global using AiChatBackend.Enums;
 global using AiChatBackend.Models;
+using AiChatBackend.Hubs;
+using AiChatBackend.ServiceExtensions;
+using AiChatBackend.Services;
 using Microsoft.Extensions.AI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +17,12 @@ builder.Services.AddChatClient(x =>
 
     return new OllamaChatClient(endpoint, model);
 });
+
+builder.Services.AddSingleton<IHubUserService, HubUserService>();
+builder.Services.AddSignalR().AddMessagePackProtocol();
+builder.Services.AddSignalrUserIdentifier();
+
+builder.Services.AddCors(x => x.AddDefaultPolicy(y => y.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -33,5 +42,7 @@ app.UseSwaggerUI();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ChatHub>("/chat-hub");
 
 await app.RunAsync();
