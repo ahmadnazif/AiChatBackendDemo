@@ -28,7 +28,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         {
             logger.LogInformation($"Prompt: {req.Message}");
             List<ChatMessage> msg = [];
-            msg.Add(new(GetChatRole(req.Message.Type), req.Message.Text));
+            msg.Add(new(GetChatRole(req.Message.Sender), req.Message.Text));
 
             Stopwatch sw = Stopwatch.StartNew();
             var resp = await client.GetResponseAsync(msg);
