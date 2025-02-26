@@ -11,7 +11,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
     private readonly IChatClient chatClient = chatClient;
     private readonly IHubUserService user = user;
 
-    public async Task SendAsync(ChatHubChatRequest req)
+    public async Task ReceiveMessageAsync(ChatHubChatRequest req)
     {
         var username = user.FindUsername(Context.ConnectionId);
         if (username == null)
@@ -32,7 +32,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserSe
                 Duration = sw.Elapsed
             };
 
-            await Clients.User(username).SendAsync("Receive", resp);
+            await Clients.User(username).SendAsync("OnReceived", resp);
         }
     }
 
