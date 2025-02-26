@@ -2,5 +2,5 @@
 
 public class ChatHubOneChatRequest
 {
-    public string? Message { get; set; }
+    public ChatRequest Message { get; set; }
 }
