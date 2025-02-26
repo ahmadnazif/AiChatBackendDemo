@@ -12,6 +12,7 @@ public interface IHubUserCache
     ResponseBase Add(HubCallerContext context, bool force = false);
     void Remove(string key, UserSessionKeyType type);
     UserSession Find(string key, UserSessionKeyType type);
+    string FindUsername(HubCallerContext context);
     string FindUsernameByConnectionId(string connectionId);
     string FindConnectionIdByUsername(string username);
     List<UserSession> ListAllActive();
@@ -43,10 +44,18 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDispos
     {
         return type switch
         {
-            UserSessionKeyType.Username => Users.Find(x => x.Username.ToLower() == key.ToLower()),
-            UserSessionKeyType.ConnectionId => Users.Find(x => x.ConnectionId.ToLower() == key.ToLower()),
+            UserSessionKeyType.Username => Users.Find(x => x.Username.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
+            UserSessionKeyType.ConnectionId => Users.Find(x => x.ConnectionId.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
             _ => null,
         };
+    }
+
+    public string FindUsername(HubCallerContext context)
+    {
+        var connectionId = context.ConnectionId;
+
+        var user = Find(connectionId, UserSessionKeyType.ConnectionId);
+        return user?.Username;
     }
 
     public string FindUsernameByConnectionId(string connectionId)

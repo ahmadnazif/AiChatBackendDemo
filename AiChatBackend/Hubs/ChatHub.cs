@@ -5,15 +5,15 @@ using System.Diagnostics;
 
 namespace AiChatBackend.Hubs;
 
-public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserCache user) : Hub
+public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache cache) : Hub
 {
     private readonly ILogger<ChatHub> logger = logger;
-    private readonly IChatClient chatClient = chatClient;
-    private readonly IHubUserCache user = user;
+    private readonly IChatClient client = client;
+    private readonly IHubUserCache cache = cache;
 
     public async Task ReceiveMessageAsync(ChatHubChatRequest req)
     {
-        var username = user.FindUsernameByConnectionId(Context.ConnectionId);
+        var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
         if (username == null)
             logger.LogWarning($"Username {username} not found in cache");
         else
@@ -23,7 +23,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserCa
             msg.Add(new(ChatRole.User, req.Message));
 
             Stopwatch sw = Stopwatch.StartNew();
-            var resp = await chatClient.GetResponseAsync(msg);
+            var resp = await client.GetResponseAsync(msg);
             sw.Stop();
 
             ChatHubChatResponse r = new()
@@ -37,14 +37,14 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserCa
             };
 
             await Clients.User(username).SendAsync("OnReceived", r);
-            logger.LogInformation($"Response generated & sent [{sw.Elapsed}] {resp.Message.Role}");
+            logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role} Duration: {sw.Elapsed}");
         }
     }
 
     #region Override methods
     public override Task OnConnectedAsync()
     {
-        user.Add(Context);
+        cache.Add(Context);
         logger.LogInformation($"A client connected. Connection ID: {Context.ConnectionId}");
         return base.OnConnectedAsync();
     }
@@ -56,7 +56,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient chatClient, IHubUserCa
 
         var connectionId = Context.ConnectionId;
         logger.LogInformation($"A client has been disconnected. Connection ID: {connectionId}");
-        user.Remove(connectionId, UserSessionKeyType.ConnectionId);
+        cache.Remove(connectionId, UserSessionKeyType.ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
     #endregion
