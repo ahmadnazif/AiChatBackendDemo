@@ -2,6 +2,8 @@
 
 namespace AiChatBackend.Controllers;
 
+[ApiExplorerSettings(IgnoreApi = true)]
+[ApiController]
 [Route("/")]
 public class HomeController : ControllerBase
 {

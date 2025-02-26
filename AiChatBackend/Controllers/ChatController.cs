@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 namespace AiChatBackend.Controllers;
 
 [Route("api/chat")]
+[ApiController]
 public class ChatController(IChatClient chatClient, ILogger<ChatController> logger) : ControllerBase
 {
     private readonly IChatClient chatClient = chatClient;
