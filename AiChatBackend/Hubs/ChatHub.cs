@@ -53,25 +53,47 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             logger.LogWarning($"Username {username} not found in cache");
         else
         {
-            if (req.PreviousMessages.Count == 0)
+            if (req.LatestMessage == null)
             {
-                logger.LogError("No chat message received");
+                logger.LogError($"{nameof(req.LatestMessage)} is NULL and it is required");
                 return;
             }
 
-            var lastMsg = ChatHelper.GetLastChatMsg(req.PreviousMessages);
+            if (string.IsNullOrWhiteSpace(req.LatestMessage.Text))
+            {
+                logger.LogError($"{nameof(req.LatestMessage.Text)} is NULL and it is required");
+                return;
+            }
 
-            logger.LogInformation($"Last prompt: {lastMsg.Text}");
             List<ChatMessage> chatMessages = [];
 
-            foreach (var m in req.PreviousMessages)
+            if (req.PreviousMessages.Count == 0) // Initial chat
             {
                 chatMessages.Add(new()
                 {
-                    Role = ChatHelper.GetChatRole(m.Sender),
-                    Text = m.Text,
+                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
+                    Text = req.LatestMessage.Text
                 });
             }
+            else  // Subsequent chat
+            {
+                foreach (var m in req.PreviousMessages)
+                {
+                    chatMessages.Add(new()
+                    {
+                        Role = ChatHelper.GetChatRole(m.Sender),
+                        Text = m.Text,
+                    });                    
+                }
+
+                chatMessages.Add(new()
+                {
+                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
+                    Text = req.LatestMessage.Text
+                });
+            }
+
+            logger.LogInformation($"Prompt: {req.LatestMessage.Text}");
 
             Stopwatch sw = Stopwatch.StartNew();
             var resp = await client.GetResponseAsync(chatMessages);
@@ -87,8 +109,8 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 ModelId = resp.ModelId
             };
 
-            await Clients.User(username).SendAsync("OnReceivedMany", r);
-            logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role} Duration: {sw.Elapsed}");
+            await Clients.User(username).SendAsync("OnReceivedChained", r);
+            logger.LogInformation($"Response generated & sent. Chained: {req.PreviousMessages.Count} msgs, Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
         }
     }
 
