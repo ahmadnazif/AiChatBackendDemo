@@ -19,6 +19,8 @@ builder.Services.AddChatClient(x =>
     return new OllamaChatClient(endpoint, model);
 });
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddSingleton<IHubUserCache, HubUserCache>();
 builder.Services.AddSignalR().AddMessagePackProtocol();
 builder.Services.AddSignalrUserIdentifier();
