@@ -46,13 +46,14 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
-    public async Task ReceiveManyAsync(OneChatRequest req)
+    public async Task ReceiveManyAsync(ManyChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
         if (username == null)
             logger.LogWarning($"Username {username} not found in cache");
         else
         {
+            var lastPrompt = req.Messages
             logger.LogInformation($"Prompt: {req.Message}");
             List<ChatMessage> msg = [];
 

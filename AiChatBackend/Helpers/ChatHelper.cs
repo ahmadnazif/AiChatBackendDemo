@@ -10,4 +10,12 @@ public static class ChatHelper
         ChatSender.Assistant => ChatRole.Assistant,
         _ => ChatRole.User,
     };
+
+    public static ChatMsg GetLastChatMsg(List<ChatMsg> all)
+    {
+        if (all.Count == 0)
+            return null;
+
+        return all[^1];
+    }
 }
