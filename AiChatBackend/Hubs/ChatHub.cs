@@ -15,35 +15,43 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
     public async Task ReceiveOneAsync(OneChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
+
         if (username == null)
-            logger.LogWarning($"Username {username} not found in cache");
-        else
         {
-            logger.LogInformation($"Prompt: {req.Message}");
-            List<ChatMessage> msg = [];
-
-            var role = ChatHelper.GetChatRole(req.Message.Sender);
-            var text = req.Message.Text;
-
-            msg.Add(new(role, text));
-
-            Stopwatch sw = Stopwatch.StartNew();
-            var resp = await client.GetResponseAsync(msg);
-            sw.Stop();
-
-            OneChatResponse r = new()
-            {
-                Username = username,
-                ConnectionId = Context.ConnectionId,
-                RequestMessage = new(ChatSender.User, req.Message.Text),
-                ResponseMessage = new(ChatSender.Assistant, resp.Message.Text),
-                Duration = sw.Elapsed,
-                ModelId = resp.ModelId
-            };
-
-            await Clients.User(username).SendAsync("OnReceivedOne", r);
-            logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
+            logger.LogWarning($"Username {username} not found in cache");
+            return;
         }
+
+        if (req == null)
+        {
+            logger.LogError($"{nameof(req)} is NULL");
+            return;
+        }
+
+        logger.LogInformation($"Prompt: {req.Message}");
+        List<ChatMessage> msg = [];
+
+        var role = ChatHelper.GetChatRole(req.Message.Sender);
+        var text = req.Message.Text;
+
+        msg.Add(new(role, text));
+
+        Stopwatch sw = Stopwatch.StartNew();
+        var resp = await client.GetResponseAsync(msg);
+        sw.Stop();
+
+        OneChatResponse r = new()
+        {
+            Username = username,
+            ConnectionId = Context.ConnectionId,
+            RequestMessage = new(ChatSender.User, req.Message.Text),
+            ResponseMessage = new(ChatSender.Assistant, resp.Message.Text),
+            Duration = sw.Elapsed,
+            ModelId = resp.ModelId
+        };
+
+        await Clients.User(username).SendAsync("OnReceivedOne", r);
+        logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
     }
 
     public async Task ReceiveChainedAsync(ChainedChatRequest req)
@@ -56,7 +64,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             return;
         }
 
-        if(req == null)
+        if (req == null)
         {
             logger.LogError($"{nameof(req)} is NULL");
             return;
@@ -74,6 +82,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             return;
         }
 
+        logger.LogInformation($"Prompt: {req.LatestMessage}");
         List<ChatMessage> chatMessages = [];
 
         if (req.PreviousMessages.Count == 0) // Initial chat
@@ -101,8 +110,6 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 Text = req.LatestMessage.Text
             });
         }
-
-        logger.LogInformation($"Prompt: {req.LatestMessage.Text}");
 
         Stopwatch sw = Stopwatch.StartNew();
         var resp = await client.GetResponseAsync(chatMessages);
