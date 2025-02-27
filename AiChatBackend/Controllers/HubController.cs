@@ -22,8 +22,8 @@ public class HubController(IHubUserCache user) : ControllerBase
     public ActionResult<UserSession> GetUserSessionByConnectionId([FromQuery] string? connectionId) => user.Find(connectionId, UserSessionKeyType.ConnectionId);
 
     [HttpGet("user/count-all")]
-    public ActionResult<int> CountAllUser() => user.CountAll();
+    public ActionResult<int> CountAllUser() => user.CountAll;
 
     [HttpGet("user/list-all")]
-    public ActionResult<List<UserSession>> ListAllUser() => user.ListAllActive();
+    public ActionResult<List<UserSession>> ListAllUser() => user.AllActive;
 }

@@ -7,7 +7,8 @@ public interface IHubUserCache
 {
     bool IsExist(string key, UserSessionKeyType type);
     bool IsActive(string connectionId);
-    int CountAll();
+    int CountAll { get; }
+    List<UserSession> AllActive { get; }
     ResponseBase Add(string connectionId, string username, bool force = false);
     ResponseBase Add(HubCallerContext context, bool force = false);
     void Remove(string key, UserSessionKeyType type);
@@ -15,25 +16,23 @@ public interface IHubUserCache
     string FindUsername(HubCallerContext context);
     string FindUsernameByConnectionId(string connectionId);
     string FindConnectionIdByUsername(string username);
-    List<UserSession> ListAllActive();
 }
 
 public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDisposable
 {
     private readonly ILogger<HubUserCache> logger = logger;
+    private readonly List<UserSession> users = [];
 
-    private List<UserSession> Users { get; set; } = [];
+    public int CountAll => users.Count;
 
-    public int CountAll() => Users.Count;
-
-    public List<UserSession> ListAllActive() => Users;
+    public List<UserSession> AllActive => users;
 
     public bool IsExist(string key, UserSessionKeyType type)
     {
         return type switch
         {
-            UserSessionKeyType.Username => Users.Exists(x => x.Username.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
-            UserSessionKeyType.ConnectionId => Users.Exists(x => x.ConnectionId.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
+            UserSessionKeyType.Username => users.Exists(x => x.Username.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
+            UserSessionKeyType.ConnectionId => users.Exists(x => x.ConnectionId.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
             _ => false,
         };
     }
@@ -44,8 +43,8 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDispos
     {
         return type switch
         {
-            UserSessionKeyType.Username => Users.Find(x => x.Username.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
-            UserSessionKeyType.ConnectionId => Users.Find(x => x.ConnectionId.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
+            UserSessionKeyType.Username => users.Find(x => x.Username.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
+            UserSessionKeyType.ConnectionId => users.Find(x => x.ConnectionId.Equals(key, StringComparison.CurrentCultureIgnoreCase)),
             _ => null,
         };
     }
@@ -99,7 +98,7 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDispos
                 StartTime = DateTime.Now
             };
 
-            Users.Add(user);
+            users.Add(user);
 
             return new()
             {
@@ -193,7 +192,7 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDispos
         {
             var user = Find(key, type);
             if (user != null)
-                Users.Remove(user);
+                users.Remove(user);
         }
         catch (Exception ex)
         {
@@ -203,7 +202,7 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDispos
 
     public void Dispose()
     {
-        Users.Clear();
+        users.Clear();
         GC.SuppressFinalize(this);
     }
 }
