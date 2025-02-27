@@ -46,6 +46,40 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
+    public async Task ReceiveManyAsync(OneChatRequest req)
+    {
+        var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
+        if (username == null)
+            logger.LogWarning($"Username {username} not found in cache");
+        else
+        {
+            logger.LogInformation($"Prompt: {req.Message}");
+            List<ChatMessage> msg = [];
+
+            var role = ChatHelper.GetChatRole(req.Message.Sender);
+            var text = req.Message.Text;
+
+            msg.Add(new(role, text));
+
+            Stopwatch sw = Stopwatch.StartNew();
+            var resp = await client.GetResponseAsync(msg);
+            sw.Stop();
+
+            OneChatResponse r = new()
+            {
+                Username = username,
+                ConnectionId = Context.ConnectionId,
+                RequestMessage = req.Message.Text,
+                ResponseMessage = resp.Message.Text,
+                Duration = sw.Elapsed,
+                ModelId = resp.ModelId
+            };
+
+            await Clients.User(username).SendAsync("OnReceivedOne", r);
+            logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role} Duration: {sw.Elapsed}");
+        }
+    }
+
 
     #region Override methods
     public override Task OnConnectedAsync()
