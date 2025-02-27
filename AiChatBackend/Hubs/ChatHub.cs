@@ -12,13 +12,6 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
     private readonly IChatClient client = client;
     private readonly IHubUserCache cache = cache;
 
-    private static ChatRole GetChatRole(ChatSender sender) => sender switch
-    {
-        ChatSender.User => ChatRole.User,
-        ChatSender.Assistant => ChatRole.Assistant,
-        _ => ChatRole.User,
-    };
-
     public async Task ReceiveOneAsync(OneChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
@@ -29,7 +22,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             logger.LogInformation($"Prompt: {req.Message}");
             List<ChatMessage> msg = [];
 
-            var role = GetChatRole(req.Message.Sender);
+            var role = ChatHelper.GetChatRole(req.Message.Sender);
             var text = req.Message.Text;
 
             msg.Add(new(role, text));
