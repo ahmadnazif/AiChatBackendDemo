@@ -15,30 +15,39 @@ public class InfoController(IConfiguration config, IHttpClientFactory http) : Co
     public async Task<ActionResult<object>> GetAiRuntimeInfo()
     {
         const string Ollama = "Ollama";
-        var ollamaEndpoint = config[$"{Ollama}:Endpoint"];
+        var baseurl = config[$"{Ollama}:Endpoint"];    
 
         return new
         {
-            OllamaEndpoint = ollamaEndpoint,
-            LocalModel = await CallApiAsync(ollamaEndpoint, "api/tags"), //config[$"{Ollama}:Model"],
-            RunningModel = await CallApiAsync(ollamaEndpoint, "api/ps"),
-            ServerStatus = await GetServerStatusAsync(ollamaEndpoint)
+            Server = baseurl,
+            ServerStatus = await GetServerStatusAsync(baseurl),
+            TagsEndpoint = await CallOllamaTagsAsync(baseurl),
+            PsEndpoint = await CallOllamaPsAsync(baseurl),
         };
     }
 
-    private async Task<object> CallApiAsync(string ollamaEndpoint, string route)
+    private async Task<OllamaTagsResponse> CallOllamaTagsAsync(string baseurl)
     {
         var httpClient = http.CreateClient();
-        httpClient.BaseAddress = new(ollamaEndpoint);
+        httpClient.BaseAddress = new(baseurl);
         httpClient.Timeout = httpClientTimeout;
-        var resp = await httpClient.GetAsync(route);
-        return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStringAsync() : "Server not running";
+        var resp = await httpClient.GetAsync("api/tags");
+        return resp.IsSuccessStatusCode ? await resp.Content.ReadFromJsonAsync<OllamaTagsResponse>() : null;
     }
 
-    private async Task<string> GetServerStatusAsync(string ollamaEndpoint)
+    private async Task<OllamaPsResponse> CallOllamaPsAsync(string baseurl)
     {
         var httpClient = http.CreateClient();
-        httpClient.BaseAddress = new(ollamaEndpoint);
+        httpClient.BaseAddress = new(baseurl);
+        httpClient.Timeout = httpClientTimeout;
+        var resp = await httpClient.GetAsync("api/ps");
+        return resp.IsSuccessStatusCode ? await resp.Content.ReadFromJsonAsync<OllamaPsResponse>() : null;
+    }
+
+    private async Task<string> GetServerStatusAsync(string baseurl)
+    {
+        var httpClient = http.CreateClient();
+        httpClient.BaseAddress = new(baseurl);
         httpClient.Timeout = httpClientTimeout;
         var resp = await httpClient.GetAsync(string.Empty);
         return resp.IsSuccessStatusCode ? "Running": "Not running";
