@@ -8,7 +8,7 @@ public interface IHubUserCache
     bool IsExist(string key, UserSessionKeyType type);
     bool IsActive(string connectionId);
     int CountAll { get; }
-    List<UserSession> AllActive { get; }
+    List<UserSession> ActiveUsers { get; }
     ResponseBase Add(string connectionId, string username, bool force = false);
     ResponseBase Add(HubCallerContext context, bool force = false);
     void Remove(string key, UserSessionKeyType type);
@@ -25,7 +25,7 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache
 
     public int CountAll => users.Count;
 
-    public List<UserSession> AllActive => users;
+    public List<UserSession> ActiveUsers => users;
 
     public bool IsExist(string key, UserSessionKeyType type)
     {

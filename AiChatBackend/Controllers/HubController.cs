@@ -25,5 +25,5 @@ public class HubController(IHubUserCache user) : ControllerBase
     public ActionResult<int> CountAllUser() => user.CountAll;
 
     [HttpGet("user/list-all")]
-    public ActionResult<List<UserSession>> ListAllUser() => user.AllActive;
+    public ActionResult<List<UserSession>> ListAllUser() => user.ActiveUsers;
 }
