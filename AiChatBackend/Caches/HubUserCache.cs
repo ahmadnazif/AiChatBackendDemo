@@ -18,7 +18,7 @@ public interface IHubUserCache
     string FindConnectionIdByUsername(string username);
 }
 
-public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDisposable
+public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache
 {
     private readonly ILogger<HubUserCache> logger = logger;
     private readonly List<UserSession> users = [];
@@ -198,11 +198,5 @@ public class HubUserCache(ILogger<HubUserCache> logger) : IHubUserCache, IDispos
         {
             logger.LogError(ex.Message);
         }
-    }
-
-    public void Dispose()
-    {
-        users.Clear();
-        GC.SuppressFinalize(this);
     }
 }
