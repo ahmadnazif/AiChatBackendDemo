@@ -46,25 +46,25 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
-    public async Task ReceiveChainedAsync(ManyChatRequest req)
+    public async Task ReceiveChainedAsync(ChainedChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
         if (username == null)
             logger.LogWarning($"Username {username} not found in cache");
         else
         {
-            if (req.Messages.Count == 0)
+            if (req.PreviousMessages.Count == 0)
             {
                 logger.LogError("No chat message received");
                 return;
             }
 
-            var lastMsg = ChatHelper.GetLastChatMsg(req.Messages);
+            var lastMsg = ChatHelper.GetLastChatMsg(req.PreviousMessages);
 
             logger.LogInformation($"Last prompt: {lastMsg.Text}");
             List<ChatMessage> chatMessages = [];
 
-            foreach (var m in req.Messages)
+            foreach (var m in req.PreviousMessages)
             {
                 chatMessages.Add(new()
                 {
