@@ -53,14 +53,25 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             logger.LogWarning($"Username {username} not found in cache");
         else
         {
-            var lastPrompt = req.Messages
-            logger.LogInformation($"Prompt: {req.Message}");
+            if (req.Messages.Count == 0)
+            {
+                logger.LogError("No chat message received");
+                return;
+            }
+
+            var lastMsg = ChatHelper.GetLastChatMsg(req.Messages);
+
+            logger.LogInformation($"Last prompt: {lastMsg.Text}");
             List<ChatMessage> msg = [];
 
-            var role = ChatHelper.GetChatRole(req.Message.Sender);
-            var text = req.Message.Text;
-
-            msg.Add(new(role, text));
+            foreach (var m in req.Messages)
+            {
+                msg.Add(new()
+                {
+                    Role = ChatHelper.GetChatRole(m.Sender),
+                    Text = m.Text,
+                });
+            }
 
             Stopwatch sw = Stopwatch.StartNew();
             var resp = await client.GetResponseAsync(msg);
