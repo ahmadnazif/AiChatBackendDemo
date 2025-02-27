@@ -2,6 +2,6 @@
 
 public class BatchChatRequest
 {
-    public List<ChatRequest> Messages { get; set; }
+    public List<ChatMsg> Messages { get; set; }
 
 }
