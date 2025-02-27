@@ -46,7 +46,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
-    public async Task ReceiveManyAsync(ManyChatRequest req)
+    public async Task ReceiveChainedAsync(ManyChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
         if (username == null)
@@ -62,11 +62,11 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             var lastMsg = ChatHelper.GetLastChatMsg(req.Messages);
 
             logger.LogInformation($"Last prompt: {lastMsg.Text}");
-            List<ChatMessage> msg = [];
+            List<ChatMessage> chatMessages = [];
 
             foreach (var m in req.Messages)
             {
-                msg.Add(new()
+                chatMessages.Add(new()
                 {
                     Role = ChatHelper.GetChatRole(m.Sender),
                     Text = m.Text,
@@ -74,7 +74,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             }
 
             Stopwatch sw = Stopwatch.StartNew();
-            var resp = await client.GetResponseAsync(msg);
+            var resp = await client.GetResponseAsync(chatMessages);
             sw.Stop();
 
             OneChatResponse r = new()
@@ -87,7 +87,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 ModelId = resp.ModelId
             };
 
-            await Clients.User(username).SendAsync("OnReceivedOne", r);
+            await Clients.User(username).SendAsync("OnReceivedMany", r);
             logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role} Duration: {sw.Elapsed}");
         }
     }

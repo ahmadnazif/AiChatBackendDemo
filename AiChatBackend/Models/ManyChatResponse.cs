@@ -2,4 +2,5 @@
 
 public class ManyChatResponse
 {
+    public List<OneChatResponse> Responses { get; set; }
 }
