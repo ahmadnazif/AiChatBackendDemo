@@ -11,6 +11,13 @@ public static class ChatHelper
         _ => ChatRole.User,
     };
 
+    public static ChatSender GetChatSender(ChatRole role) => role.Value switch
+    {
+        "user" => ChatSender.User,
+        "assistant" => ChatSender.Assistant,
+        _ => ChatSender.Assistant,
+    };
+
     public static ChatMsg GetLastChatMsg(List<ChatMsg> all)
     {
         if (all.Count == 0)

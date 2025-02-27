@@ -99,12 +99,13 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             var resp = await client.GetResponseAsync(chatMessages);
             sw.Stop();
 
-            OneChatResponse r = new()
+            ChainedChatResponse r = new()
             {
                 Username = username,
                 ConnectionId = Context.ConnectionId,
-                RequestMessage = req.Message.Text,
-                ResponseMessage = resp.Message.Text,
+                
+                //RequestMessage = req.Message.Text,
+                ResponseMessage = new( resp.Message.Text,
                 Duration = sw.Elapsed,
                 ModelId = resp.ModelId
             };
