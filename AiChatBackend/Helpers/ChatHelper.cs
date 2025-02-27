@@ -25,4 +25,16 @@ public static class ChatHelper
 
         return all[^1];
     }
+
+    public static List<ChatMsg> BuildPreviousMessages(List<ChatMessage> messages)
+    {
+        List<ChatMsg> list = [];
+        foreach(var m in messages)
+        {
+            var sender = GetChatSender(m.Role);
+            list.Add(new(sender, m.Text));
+        }
+
+        return list;
+    }
 }

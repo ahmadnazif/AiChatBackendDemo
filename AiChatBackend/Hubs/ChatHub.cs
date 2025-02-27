@@ -42,77 +42,86 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             };
 
             await Clients.User(username).SendAsync("OnReceivedOne", r);
-            logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role} Duration: {sw.Elapsed}");
+            logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
         }
     }
 
     public async Task ReceiveChainedAsync(ChainedChatRequest req)
     {
         var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
+
         if (username == null)
-            logger.LogWarning($"Username {username} not found in cache");
-        else
         {
-            if (req.LatestMessage == null)
-            {
-                logger.LogError($"{nameof(req.LatestMessage)} is NULL and it is required");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(req.LatestMessage.Text))
-            {
-                logger.LogError($"{nameof(req.LatestMessage.Text)} is NULL and it is required");
-                return;
-            }
-
-            List<ChatMessage> chatMessages = [];
-
-            if (req.PreviousMessages.Count == 0) // Initial chat
-            {
-                chatMessages.Add(new()
-                {
-                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                    Text = req.LatestMessage.Text
-                });
-            }
-            else  // Subsequent chat
-            {
-                foreach (var m in req.PreviousMessages)
-                {
-                    chatMessages.Add(new()
-                    {
-                        Role = ChatHelper.GetChatRole(m.Sender),
-                        Text = m.Text,
-                    });                    
-                }
-
-                chatMessages.Add(new()
-                {
-                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                    Text = req.LatestMessage.Text
-                });
-            }
-
-            logger.LogInformation($"Prompt: {req.LatestMessage.Text}");
-
-            Stopwatch sw = Stopwatch.StartNew();
-            var resp = await client.GetResponseAsync(chatMessages);
-            sw.Stop();
-
-            ChainedChatResponse r = new()
-            {
-                Username = username,
-                ConnectionId = Context.ConnectionId,
-                
-                //RequestMessage = req.Message.Text,
-                ResponseMessage = new( resp.Message.Text,
-                Duration = sw.Elapsed,
-                ModelId = resp.ModelId
-            };
-
-            await Clients.User(username).SendAsync("OnReceivedChained", r);
-            logger.LogInformation($"Response generated & sent. Chained: {req.PreviousMessages.Count} msgs, Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
+            logger.LogWarning($"Username {username} not found in cache");
+            return;
         }
+
+        if(req == null)
+        {
+            logger.LogError($"{nameof(req)} is NULL");
+            return;
+        }
+
+        if (req.LatestMessage == null)
+        {
+            logger.LogError($"{nameof(req.LatestMessage)} is NULL and it is required");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(req.LatestMessage.Text))
+        {
+            logger.LogError($"{nameof(req.LatestMessage.Text)} is NULL and it is required");
+            return;
+        }
+
+        List<ChatMessage> chatMessages = [];
+
+        if (req.PreviousMessages.Count == 0) // Initial chat
+        {
+            chatMessages.Add(new()
+            {
+                Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
+                Text = req.LatestMessage.Text
+            });
+        }
+        else  // Subsequent chat
+        {
+            foreach (var m in req.PreviousMessages)
+            {
+                chatMessages.Add(new()
+                {
+                    Role = ChatHelper.GetChatRole(m.Sender),
+                    Text = m.Text,
+                });
+            }
+
+            chatMessages.Add(new()
+            {
+                Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
+                Text = req.LatestMessage.Text
+            });
+        }
+
+        logger.LogInformation($"Prompt: {req.LatestMessage.Text}");
+
+        Stopwatch sw = Stopwatch.StartNew();
+        var resp = await client.GetResponseAsync(chatMessages);
+        sw.Stop();
+
+        var sender = ChatHelper.GetChatSender(resp.Message.Role);
+
+        ChainedChatResponse r = new()
+        {
+            Username = username,
+            ConnectionId = Context.ConnectionId,
+            PreviousMessages = ChatHelper.BuildPreviousMessages(chatMessages),
+            ResponseMessage = new(sender, resp.Message.Text),
+            Duration = sw.Elapsed,
+            ModelId = resp.ModelId
+        };
+
+        await Clients.User(username).SendAsync("OnReceivedChained", r);
+        logger.LogInformation($"Response generated & sent. [{resp.Choices.Count} choices] Chained: {req.PreviousMessages.Count} msgs, Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
     }
 
 
