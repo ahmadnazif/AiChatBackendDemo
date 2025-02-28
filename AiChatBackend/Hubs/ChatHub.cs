@@ -12,9 +12,9 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
     private readonly IChatClient client = client;
     private readonly IHubUserCache cache = cache;
 
-    public async Task ReceiveOneAsync(SingleChatRequest req)
+    public async Task ReceiveSingleAsync(SingleChatRequest req)
     {
-        var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
+        var username = cache.FindUsername(Context);
 
         if (username == null)
         {
@@ -40,7 +40,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         var resp = await client.GetResponseAsync(msg);
         sw.Stop();
 
-        SingleChatResponse r = new()
+        SingleChatResponse data = new()
         {
             Username = username,
             ConnectionId = Context.ConnectionId,
@@ -50,13 +50,13 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             ModelId = resp.ModelId
         };
 
-        await Clients.User(username).SendAsync("OnReceivedOne", r);
+        await Clients.User(username).SendAsync("OnReceivedSingle", data);
         logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
     }
 
     public async Task ReceiveChainedAsync(ChainedChatRequest req)
     {
-        var username = cache.FindUsername(Context); //cache.FindUsernameByConnectionId(Context.ConnectionId);
+        var username = cache.FindUsername(Context);
 
         if (username == null)
         {
