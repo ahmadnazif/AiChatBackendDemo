@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AiChatBackend.Controllers;
 
-[Route($"{BASE_ROUTE}/hub")]
+[Route($"{BASE_ROUTE}/hub-info")]
 [ApiController]
-public class HubController(IHubUserCache user) : ControllerBase
+public class HubInfoController(IHubUserCache user) : ControllerBase
 {
     private readonly IHubUserCache user = user;
 
