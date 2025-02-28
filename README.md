@@ -12,7 +12,7 @@ This is backend API powered by new `Microsoft.Extensions.AI`, with Ollama as gen
 - Run the "Llama3.2" model by command `ollama run llama3.2`. This will pull the model to your PC (or Docker)
 - Verify the model with command `ollama ps` (in CMD, PS, terminal or Docker Containter "Exec" tab.
 
-## Testing the app
+## Running the app
 - .NET 8 SDK must be installed to debug the code.
 - Pull the source code, then open it using Visual Studio 2022.
 - This app is host using Kestrel server on port 4444 and you can change it on `appsettings.json`
