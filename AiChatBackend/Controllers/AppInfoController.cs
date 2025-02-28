@@ -4,9 +4,9 @@ using Microsoft.Extensions.AI;
 
 namespace AiChatBackend.Controllers;
 
-[Route($"{BASE_ROUTE}/info")]
+[Route($"{BASE_ROUTE}/app-info")]
 [ApiController]
-public class InfoController(IConfiguration config, ApiClient api) : ControllerBase
+public class AppInfoController(IConfiguration config, ApiClient api) : ControllerBase
 {
     private readonly IConfiguration config = config;
     private readonly ApiClient api = api;
