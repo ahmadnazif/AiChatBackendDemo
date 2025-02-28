@@ -6,6 +6,7 @@ using AiChatBackend.Caches;
 using AiChatBackend.Hubs;
 using AiChatBackend.ServiceExtensions;
 using Microsoft.Extensions.AI;
+using AiChatBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -20,6 +21,7 @@ builder.Services.AddChatClient(x =>
 });
 
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<ApiClient>();
 
 builder.Services.AddSingleton<IHubUserCache, HubUserCache>();
 builder.Services.AddSignalR().AddMessagePackProtocol();
