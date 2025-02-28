@@ -51,6 +51,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<ChatHub>("/chat-hub");
+app.MapHub<ChatHub>($"/{BASE_ROUTE}/chat-hub");
 
 await app.RunAsync();
