@@ -1,4 +1,4 @@
-# AI Chat Backend
+# AI Chat Backend Demo
 This is backend API powered by Microsoft.Extensions.AI 
 
 ## Requirement
