@@ -1,5 +1,5 @@
 # AI Chat Backend Demo
-This is backend API powered by new `Microsoft.Extensions.AI`. Using Ollama as AI runtime & Llama 3.2 model with 3.2B paramters. You can always use another powerful model depending on your PC specification.
+This is backend API powered by new `Microsoft.Extensions.AI`, with Ollama as generative AI runtime & Llama 3.2 model with 3.2B paramters. You can always use [other](https://ollama.com/search) powerful model depending on your PC specification.
 
 ## Requirement
 #### Ollama runtime & LLama3.2 model
