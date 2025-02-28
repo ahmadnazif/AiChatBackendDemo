@@ -1,6 +1,7 @@
 global using System.Text.Json;
 global using AiChatBackend.Enums;
 global using AiChatBackend.Models;
+global using static AiChatBackend.Constants;
 global using AiChatBackend.Helpers;
 using AiChatBackend.Caches;
 using AiChatBackend.Hubs;

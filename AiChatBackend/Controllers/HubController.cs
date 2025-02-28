@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AiChatBackend.Controllers;
 
-[Route("rest-api/hub")]
+[Route($"{BASE_ROUTE}/hub")]
 [ApiController]
 public class HubController(IHubUserCache user) : ControllerBase
 {
