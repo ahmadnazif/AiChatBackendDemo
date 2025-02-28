@@ -52,9 +52,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
         await Clients.User(username).SendAsync("OnReceivedSingle", data);
         LogSent(resp, sw);
-    }
-
-  
+    }  
 
     public async Task ReceiveChainedAsync(ChainedChatRequest req)
     {
@@ -119,7 +117,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
         var sender = ChatHelper.GetChatSender(resp.Message.Role);
 
-        ChainedChatResponse r = new()
+        ChainedChatResponse data = new()
         {
             Username = username,
             ConnectionId = Context.ConnectionId,
@@ -129,7 +127,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             ModelId = resp.ModelId
         };
 
-        await Clients.User(username).SendAsync("OnReceivedChained", r);
+        await Clients.User(username).SendAsync("OnReceivedChained", data);
         LogSent(resp, sw);
     }
 
@@ -154,7 +152,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             logger.LogError(exception.Message);
 
         var connectionId = Context.ConnectionId;
-        logger.LogInformation($"A client has been disconnected. Connection ID: {connectionId}");
+        logger.LogInformation($"A client disconnected. Connection ID: {connectionId}");
         cache.Remove(connectionId, UserSessionKeyType.ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
