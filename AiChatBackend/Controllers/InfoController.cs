@@ -19,8 +19,8 @@ public class InfoController(IConfiguration config, IHttpClientFactory http) : Co
 
         return new
         {
-            Server = baseurl,
-            ServerStatus = await GetServerStatusAsync(baseurl),
+            Ollama = baseurl,
+            OllamaStatus = await GetServerStatusAsync(baseurl),
             TagsEndpoint = await CallOllamaTagsAsync(baseurl),
             PsEndpoint = await CallOllamaPsAsync(baseurl),
         };
