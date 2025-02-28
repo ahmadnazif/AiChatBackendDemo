@@ -51,8 +51,10 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         };
 
         await Clients.User(username).SendAsync("OnReceivedSingle", data);
-        logger.LogInformation($"Response generated & sent. Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
+        LogSent(resp, sw);
     }
+
+  
 
     public async Task ReceiveChainedAsync(ChainedChatRequest req)
     {
@@ -128,7 +130,13 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         };
 
         await Clients.User(username).SendAsync("OnReceivedChained", r);
-        logger.LogInformation($"Response generated & sent. [{resp.Choices.Count} choices] Chained: {req.PreviousMessages.Count} msgs, Role: {resp.Message.Role}, Duration: {sw.Elapsed}");
+        LogSent(resp, sw);
+    }
+
+    private void LogSent(ChatResponse resp, Stopwatch sw)
+    {
+        var usage = resp.Usage;
+        logger.LogInformation($"Response sent. Role: {resp.Message.Role}, Input token: {usage.InputTokenCount}, Output token: {usage.OutputTokenCount}, Duration: {sw.Elapsed}");
     }
 
 
