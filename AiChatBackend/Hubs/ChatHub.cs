@@ -190,8 +190,9 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 });
             }
 
-            string streamId = Guid.NewGuid().ToString("N").ToUpper();
+            var streamId = Generator.NextId();
             logger.LogInformation($"Streaming: {streamId}");
+
             await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
                 var hasFinished = resp.FinishReason.HasValue;
