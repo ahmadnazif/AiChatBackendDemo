@@ -47,16 +47,17 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
         logger.LogInformation(JsonSerializer.Serialize(r));
     }
 
-    [NonAction]
-    [HttpGet("stream")]
-    public async IAsyncEnumerable<ChatResponseUpdate> Stream([FromQuery] string? prompt, [EnumeratorCancellation] CancellationToken ct)
+    [HttpPost("stream")]
+    public async IAsyncEnumerable<string> Stream([FromQuery] string? prompt, [EnumeratorCancellation] CancellationToken ct)
     {
         List<ChatMessage> msg = [];
         msg.Add(new ChatMessage(ChatRole.User, prompt));
 
         await foreach (var x in chatClient.GetStreamingResponseAsync(msg, cancellationToken: ct))
         {
-            yield return x;
+            var txt = x.Text;
+            logger.LogInformation($"{txt} | {x.ChatThreadId} |");
+            yield return txt;
         }
     }
 }

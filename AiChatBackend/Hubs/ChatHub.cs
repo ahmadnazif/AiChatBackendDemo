@@ -131,83 +131,80 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         LogSent(resp, sw);
     }
 
-    public async IAsyncEnumerable<ChainedChatResponse> ReceiveChainedStream(ChainedChatRequest req)
+    public async IAsyncEnumerable<string> ChatStreamDemoAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
-        var username = cache.FindUsername(Context);
-
-        if (username == null)
+        try
         {
-            logger.LogWarning($"Username {username} not found in cache");
-            yield break;
-        }
+            var username = cache.FindUsername(Context);
 
-        if (req == null)
-        {
-            logger.LogError($"{nameof(req)} is NULL");
-            yield break;
-        }
-
-        if (req.LatestMessage == null)
-        {
-            logger.LogError($"{nameof(req.LatestMessage)} is NULL and it is required");
-            yield break;
-        }
-
-        if (string.IsNullOrWhiteSpace(req.LatestMessage.Text))
-        {
-            logger.LogError($"{nameof(req.LatestMessage.Text)} is NULL and it is required");
-            yield break;
-        }
-
-        logger.LogInformation($"Prompt: {req.LatestMessage}");
-        List<ChatMessage> chatMessages = [];
-
-        if (req.PreviousMessages.Count == 0) // Initial chat
-        {
-            chatMessages.Add(new()
+            if (username == null)
             {
-                Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                Text = req.LatestMessage.Text
-            });
-        }
-        else  // Subsequent chat
-        {
-            foreach (var m in req.PreviousMessages)
+                logger.LogWarning($"Username {username} not found in cache");
+                yield break;
+            }
+
+            if (req == null)
+            {
+                logger.LogError($"{nameof(req)} is NULL");
+                yield break;
+            }
+
+            if (req.LatestMessage == null)
+            {
+                logger.LogError($"{nameof(req.LatestMessage)} is NULL and it is required");
+                yield break;
+            }
+
+            if (string.IsNullOrWhiteSpace(req.LatestMessage.Text))
+            {
+                logger.LogError($"{nameof(req.LatestMessage.Text)} is NULL and it is required");
+                yield break;
+            }
+
+            logger.LogInformation($"Prompt: {req.LatestMessage}");
+            List<ChatMessage> chatMessages = [];
+
+            if (req.PreviousMessages.Count == 0) // Initial chat
             {
                 chatMessages.Add(new()
                 {
-                    Role = ChatHelper.GetChatRole(m.Sender),
-                    Text = m.Text,
+                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
+                    Text = req.LatestMessage.Text
+                });
+            }
+            else  // Subsequent chat
+            {
+                foreach (var m in req.PreviousMessages)
+                {
+                    chatMessages.Add(new()
+                    {
+                        Role = ChatHelper.GetChatRole(m.Sender),
+                        Text = m.Text,
+                    });
+                }
+
+                chatMessages.Add(new()
+                {
+                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
+                    Text = req.LatestMessage.Text
                 });
             }
 
-            chatMessages.Add(new()
+            Stopwatch sw = Stopwatch.StartNew();
+            var resp = client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct);
+            await foreach(var r in resp)
             {
-                Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                Text = req.LatestMessage.Text
-            });
+                var txt = r.Text;
+                logger.LogInformation(txt);
+                yield return txt;
+            }
         }
-
-        Stopwatch sw = Stopwatch.StartNew();
-        var resp = await client.GetResponseAsync(chatMessages);
-        sw.Stop();
-
-        var sender = ChatHelper.GetChatSender(resp.Message.Role);
-
-        ChainedChatResponse data = new()
+        finally
         {
-            Username = username,
-            ConnectionId = Context.ConnectionId,
-            PreviousMessages = ChatHelper.BuildPreviousMessages(chatMessages),
-            ResponseMessage = new(sender, resp.Message.Text),
-            Duration = sw.Elapsed,
-            ModelId = resp.ModelId
-        };
-
-        await Clients.User(username).SendAsync("OnReceivedChained", data);
-        LogSent(resp, sw);
+            if (ct.IsCancellationRequested)
+                logger.LogInformation($"Stream cancelled at {DateTime.Now.ToLongTimeString()}");
+        }
     }
-
 
     private void LogSent(ChatResponse resp, Stopwatch sw)
     {
