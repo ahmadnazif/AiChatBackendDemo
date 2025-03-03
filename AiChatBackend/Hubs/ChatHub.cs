@@ -131,7 +131,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         LogSent(resp, sw);
     }
 
-    public async IAsyncEnumerable<string> ChatStreamDemoAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> StreamChatTextAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         try
         {
