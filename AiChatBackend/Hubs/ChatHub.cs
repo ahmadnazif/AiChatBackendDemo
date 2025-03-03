@@ -52,7 +52,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
         await Clients.User(username).SendAsync("OnReceivedSingle", data);
         LogSent(resp, sw);
-    }  
+    }
 
     public async Task ReceiveChainedAsync(ChainedChatRequest req)
     {
@@ -131,7 +131,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         LogSent(resp, sw);
     }
 
-    public async IAsyncEnumerable<string> StreamChatTextAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<StreamingChatResponse> StreamChatTextAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         try
         {
@@ -190,11 +190,16 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 });
             }
 
-            await foreach(var r in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            await foreach (var r in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
-                var txt = r.Text;
-                logger.LogInformation(txt);
-                yield return txt;
+                var hasFinished = r.FinishReason.HasValue;
+                logger.LogInformation(r.ChatThreadId);
+                yield return new()
+                {
+                    HasFinished = hasFinished,
+                    Text = r.Text,
+                    CreatedAt = r.CreatedAt ?? DateTime.UtcNow
+                };
             }
         }
         finally
