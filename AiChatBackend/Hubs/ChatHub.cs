@@ -131,7 +131,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         LogSent(resp, sw);
     }
 
-    public async IAsyncEnumerable<StreamingChatResponse> StreamChatTextAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<StreamingChatResponse> StreamChatAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         try
         {
@@ -190,15 +190,13 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 });
             }
 
-            await foreach (var r in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
-                var hasFinished = r.FinishReason.HasValue;
-                logger.LogInformation(r.ChatThreadId);
                 yield return new()
                 {
-                    HasFinished = hasFinished,
-                    Text = r.Text,
-                    CreatedAt = r.CreatedAt ?? DateTime.UtcNow
+                    HasFinished = resp.FinishReason.HasValue,
+                    Text = resp.Text,
+                    CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
                 };
             }
         }
