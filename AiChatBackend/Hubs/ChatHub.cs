@@ -28,11 +28,11 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             return;
         }
 
-        logger.LogInformation($"Prompt: {req.Message}");
+        logger.LogInformation($"Prompt: {req.Prompt}");
         List<ChatMessage> msg = [];
 
-        var role = ChatHelper.GetChatRole(req.Message.Sender);
-        var text = req.Message.Text;
+        var role = ChatHelper.GetChatRole(req.Prompt.Sender);
+        var text = req.Prompt.Text;
 
         msg.Add(new(role, text));
 
@@ -44,7 +44,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         {
             Username = username,
             ConnectionId = Context.ConnectionId,
-            RequestMessage = new(ChatSender.User, req.Message.Text),
+            RequestMessage = new(ChatSender.User, req.Prompt.Text),
             ResponseMessage = new(ChatSender.Assistant, resp.Message.Text),
             Duration = sw.Elapsed,
             ModelId = resp.ModelId

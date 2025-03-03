@@ -2,5 +2,5 @@
 
 public class SingleChatRequest
 {
-    public ChatMsg Message { get; set; }
+    public ChatMsg Prompt { get; set; }
 }
