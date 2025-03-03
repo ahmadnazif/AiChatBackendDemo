@@ -199,6 +199,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                     StreamingId = streamId,
                     HasFinished = resp.FinishReason.HasValue,
                     Message = new(ChatSender.Assistant, resp.Text),
+                    ModelId = resp.ModelId,
                     CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
                 };
             }
