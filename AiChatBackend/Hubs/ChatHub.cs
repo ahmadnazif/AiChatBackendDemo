@@ -194,20 +194,26 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             logger.LogInformation($"Streaming: {streamId}");
             await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
+                var hasFinished = resp.FinishReason.HasValue;
                 yield return new()
                 {
                     StreamingId = streamId,
-                    HasFinished = resp.FinishReason.HasValue,
+                    HasFinished = hasFinished,
                     Message = new(ChatSender.Assistant, resp.Text),
                     ModelId = resp.ModelId,
                     CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
                 };
+
+                if (hasFinished)
+                {
+                    logger.LogInformation($"Streaming {streamId} completed");
+                }
             }
         }
         finally
         {
             if (ct.IsCancellationRequested)
-                logger.LogInformation($"Stream cancelled at {DateTime.Now.ToLongTimeString()}");
+                logger.LogInformation($"Streaming cancelled at {DateTime.Now.ToLongTimeString()}");
         }
     }
 
