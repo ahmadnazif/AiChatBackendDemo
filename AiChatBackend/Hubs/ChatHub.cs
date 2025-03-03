@@ -190,13 +190,13 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 });
             }
 
-            string threadId = Guid.NewGuid().ToString("N").ToUpper();
-            logger.LogInformation($"Streaming: {threadId}");
+            string streamId = Guid.NewGuid().ToString("N").ToUpper();
+            logger.LogInformation($"Streaming: {streamId}");
             await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
                 yield return new()
                 {
-                    ThreadId = threadId,
+                    StreamingId = streamId,
                     HasFinished = resp.FinishReason.HasValue,
                     Message = new(ChatSender.Assistant, resp.Text),
                     CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
