@@ -70,27 +70,27 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             return;
         }
 
-        if (req.LatestMessage == null)
+        if (req.Prompt == null)
         {
-            logger.LogError($"{nameof(req.LatestMessage)} is NULL and it is required");
+            logger.LogError($"{nameof(req.Prompt)} is NULL and it is required");
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(req.LatestMessage.Text))
+        if (string.IsNullOrWhiteSpace(req.Prompt.Text))
         {
-            logger.LogError($"{nameof(req.LatestMessage.Text)} is NULL and it is required");
+            logger.LogError($"{nameof(req.Prompt.Text)} is NULL and it is required");
             return;
         }
 
-        logger.LogInformation($"Prompt: {req.LatestMessage}");
+        logger.LogInformation($"Prompt: {req.Prompt}");
         List<ChatMessage> chatMessages = [];
 
         if (req.PreviousMessages.Count == 0) // Initial chat
         {
             chatMessages.Add(new()
             {
-                Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                Text = req.LatestMessage.Text
+                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                Text = req.Prompt.Text
             });
         }
         else  // Subsequent chat
@@ -106,8 +106,8 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             chatMessages.Add(new()
             {
-                Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                Text = req.LatestMessage.Text
+                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                Text = req.Prompt.Text
             });
         }
 
@@ -149,27 +149,27 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 yield break;
             }
 
-            if (req.LatestMessage == null)
+            if (req.Prompt == null)
             {
-                logger.LogError($"{nameof(req.LatestMessage)} is NULL and it is required");
+                logger.LogError($"{nameof(req.Prompt)} is NULL and it is required");
                 yield break;
             }
 
-            if (string.IsNullOrWhiteSpace(req.LatestMessage.Text))
+            if (string.IsNullOrWhiteSpace(req.Prompt.Text))
             {
-                logger.LogError($"{nameof(req.LatestMessage.Text)} is NULL and it is required");
+                logger.LogError($"{nameof(req.Prompt.Text)} is NULL and it is required");
                 yield break;
             }
 
-            logger.LogInformation($"Prompt: {req.LatestMessage}");
+            logger.LogInformation($"Prompt: {req.Prompt}");
             List<ChatMessage> chatMessages = [];
 
             if (req.PreviousMessages.Count == 0) // Initial chat
             {
                 chatMessages.Add(new()
                 {
-                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                    Text = req.LatestMessage.Text
+                    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                    Text = req.Prompt.Text
                 });
             }
             else  // Subsequent chat
@@ -185,8 +185,8 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
                 chatMessages.Add(new()
                 {
-                    Role = ChatHelper.GetChatRole(req.LatestMessage.Sender),
-                    Text = req.LatestMessage.Text
+                    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                    Text = req.Prompt.Text
                 });
             }
 
