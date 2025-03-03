@@ -195,7 +195,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 yield return new()
                 {
                     HasFinished = resp.FinishReason.HasValue,
-                    Text = resp.Text,
+                    Message = new(ChatSender.Assistant, resp.Text),
                     CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
                 };
             }
