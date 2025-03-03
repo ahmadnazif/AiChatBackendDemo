@@ -190,9 +190,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 });
             }
 
-            Stopwatch sw = Stopwatch.StartNew();
-            var resp = client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct);
-            await foreach(var r in resp)
+            await foreach(var r in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
                 var txt = r.Text;
                 logger.LogInformation(txt);
