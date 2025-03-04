@@ -85,7 +85,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         logger.LogInformation($"Prompt: {req.Prompt}");
         List<ChatMessage> chatMessages = [];
 
-        if (req.PreviousMessages.Count == 0) // Initial chat
+        if (req.PreviousMessages.Count == 0)
         {
             chatMessages.Add(new()
             {
@@ -93,7 +93,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 Text = req.Prompt.Text
             });
         }
-        else  // Subsequent chat
+        else
         {
             foreach (var m in req.PreviousMessages)
             {
@@ -164,7 +164,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             logger.LogInformation($"Prompt: {req.Prompt}");
             List<ChatMessage> chatMessages = [];
 
-            if (req.PreviousMessages.Count == 0) // Initial chat
+            if (req.PreviousMessages.Count == 0)
             {
                 chatMessages.Add(new()
                 {
@@ -172,7 +172,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                     Text = req.Prompt.Text
                 });
             }
-            else  // Subsequent chat
+            else
             {
                 foreach (var m in req.PreviousMessages)
                 {
