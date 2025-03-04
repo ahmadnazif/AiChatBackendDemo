@@ -126,7 +126,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             Duration = sw.Elapsed,
             ModelId = resp.ModelId
         };
-
+        
         await Clients.User(username).SendAsync("OnReceivedChained", data);
         LogSent(resp, sw);
     }
@@ -190,15 +190,15 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 });
             }
 
-            var streamId = Generator.NextId();
-            logger.LogInformation($"Streaming: {streamId}");
+            var id = Generator.NextStreamingId();
+            logger.LogInformation($"Streaming: {id}");
 
             await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
                 var hasFinished = resp.FinishReason.HasValue;
                 yield return new()
                 {
-                    StreamingId = streamId,
+                    StreamingId = id,
                     HasFinished = hasFinished,
                     Message = new(ChatSender.Assistant, resp.Text),
                     ModelId = resp.ModelId,
@@ -207,7 +207,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
                 if (hasFinished)
                 {
-                    logger.LogInformation($"Streaming {streamId} completed");
+                    logger.LogInformation($"Streaming {id} completed");
                 }
             }
         }
