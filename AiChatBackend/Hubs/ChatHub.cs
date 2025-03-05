@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 
 namespace AiChatBackend.Hubs;
 
@@ -126,7 +127,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             Duration = sw.Elapsed,
             ModelId = resp.ModelId
         };
-        
+
         await Clients.User(username).SendAsync("OnReceivedChained", data);
         LogSent(resp, sw);
     }
@@ -217,6 +218,109 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 logger.LogInformation($"Streaming cancelled at {DateTime.Now.ToLongTimeString()}");
         }
     }
+
+    public ChannelReader<StreamingChatResponse> StreamChatAsChannel(ChainedChatRequest req, CancellationToken ct)
+    {
+        var channel = Channel.CreateUnbounded<StreamingChatResponse>();
+        _ = WriteAsync(channel.Writer);
+
+        return channel.Reader;
+
+        async Task WriteAsync(ChannelWriter<StreamingChatResponse> writer)
+        {
+            try
+            {
+                var username = cache.FindUsername(Context);
+
+                if (username == null)
+                {
+                    logger.LogWarning($"Username {username} not found in cache");
+                    return;
+                }
+
+                if (req == null)
+                {
+                    logger.LogError($"{nameof(req)} is NULL");
+                    return;
+                }
+
+                if (req.Prompt == null)
+                {
+                    logger.LogError($"{nameof(req.Prompt)} is NULL and it is required");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(req.Prompt.Text))
+                {
+                    logger.LogError($"{nameof(req.Prompt.Text)} is NULL and it is required");
+                    return;
+                }
+
+                logger.LogInformation($"Prompt: {req.Prompt}");
+                List<ChatMessage> chatMessages = [];
+
+                if (req.PreviousMessages.Count == 0)
+                {
+                    chatMessages.Add(new()
+                    {
+                        Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                        Text = req.Prompt.Text
+                    });
+                }
+                else
+                {
+                    foreach (var m in req.PreviousMessages)
+                    {
+                        chatMessages.Add(new()
+                        {
+                            Role = ChatHelper.GetChatRole(m.Sender),
+                            Text = m.Text,
+                        });
+                    }
+
+                    chatMessages.Add(new()
+                    {
+                        Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                        Text = req.Prompt.Text
+                    });
+                }
+
+                var id = Generator.NextStreamingId();
+                logger.LogInformation($"Streaming: {id}");
+
+                await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+                {
+                    var hasFinished = resp.FinishReason.HasValue;
+                    await writer.WriteAsync(new()
+                    {
+                        StreamingId = id,
+                        HasFinished = hasFinished,
+                        Message = new(ChatSender.Assistant, resp.Text),
+                        ModelId = resp.ModelId,
+                        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+                    }, ct);
+
+                    if (hasFinished)
+                    {
+                        logger.LogInformation($"Streaming {id} completed");
+                        writer.Complete();
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                writer.TryComplete(ex);
+                logger.LogError(ex.Message);
+            }
+            finally
+            {
+                writer.Complete();
+                if (ct.IsCancellationRequested)
+                    logger.LogInformation($"Channel streaming cancelled at {DateTime.Now.ToLongTimeString()}");
+            }
+        }
+    }
+
 
     private void LogSent(ChatResponse resp, Stopwatch sw)
     {
