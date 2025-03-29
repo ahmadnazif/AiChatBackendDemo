@@ -1,6 +1,7 @@
 ﻿namespace AiChatBackend.Models;
 
-public class ImageChatRequest
+public class FileChatRequest
 {
+    public byte[] FileStream { get; set; }
     public ChatMsg Prompt { get; set; }
 }

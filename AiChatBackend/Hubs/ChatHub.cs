@@ -307,7 +307,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 writer.TryComplete(ex);
                 logger.LogError(ex.Message);
@@ -321,7 +321,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
-    public async IAsyncEnumerable<StreamingChatResponse> StreamImageChatAsync(ChainedChatRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<StreamingChatResponse> StreamImageChatAsync(FileChatRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         try
         {
@@ -352,38 +352,21 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             }
 
             logger.LogInformation($"Prompt: {req.Prompt}");
-            List<ChatMessage> chatMessages = [];
 
-            if (req.PreviousMessages.Count == 0)
+            ChatMessage chatMessage = new()
             {
-                chatMessages.Add(new()
-                {
-                    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                    Text = req.Prompt.Text
-                });
-            }
-            else
-            {
-                foreach (var m in req.PreviousMessages)
-                {
-                    chatMessages.Add(new()
-                    {
-                        Role = ChatHelper.GetChatRole(m.Sender),
-                        Text = m.Text,
-                    });
-                }
+                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                Text = req.Prompt.Text
+            };
 
-                chatMessages.Add(new()
-                {
-                    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                    Text = req.Prompt.Text
-                });
-            }
+            iformfi
+            chatMessage.Contents.Add(new DataContent());
+
 
             var id = Generator.NextStreamingId();
             logger.LogInformation($"Streaming: {id}");
 
-            await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            await foreach (var resp in client.GetStreamingResponseAsync(chatMessage, cancellationToken: ct))
             {
                 var hasFinished = resp.FinishReason.HasValue;
                 yield return new()
