@@ -351,6 +351,12 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 yield break;
             }
 
+            if(req.FileStream == null)
+            {
+                logger.LogError($"File stream is required");
+                yield break;
+            }
+
             logger.LogInformation($"Prompt: {req.Prompt}");
 
             ChatMessage chatMessage = new()
@@ -359,8 +365,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 Text = req.Prompt.Text
             };
 
-            iformfi
-            chatMessage.Contents.Add(new DataContent());
+            chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
 
 
             var id = Generator.NextStreamingId();
