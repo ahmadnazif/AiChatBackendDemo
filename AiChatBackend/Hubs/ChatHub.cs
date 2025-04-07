@@ -321,7 +321,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
-    public async IAsyncEnumerable<StreamingChatResponse> StreamImageChatAsync(FileChatRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<StreamingChatResponse> StreamFileChatAsync(FileChatRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         try
         {
