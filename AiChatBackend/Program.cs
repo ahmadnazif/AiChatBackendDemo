@@ -25,7 +25,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiClient>();
 
 builder.Services.AddSingleton<IHubUserCache, HubUserCache>();
-builder.Services.AddSignalR().AddMessagePackProtocol();
+builder.Services.AddSignalR(x =>
+{
+    x.MaximumReceiveMessageSize = null;
+}).AddMessagePackProtocol();
 builder.Services.AddSignalrUserIdentifier();
 
 builder.Services.AddCors(x => x.AddDefaultPolicy(y => y.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));

@@ -367,18 +367,19 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
 
-
             var id = Generator.NextStreamingId();
             logger.LogInformation($"Streaming: {id}");
 
             await foreach (var resp in client.GetStreamingResponseAsync(chatMessage, cancellationToken: ct))
             {
                 var hasFinished = resp.FinishReason.HasValue;
+                var txt = resp.Text;
+                //logger.LogInformation($"ID: {id} | {txt}");
                 yield return new()
                 {
                     StreamingId = id,
                     HasFinished = hasFinished,
-                    Message = new(ChatSender.Assistant, resp.Text),
+                    Message = new(ChatSender.Assistant, txt),
                     ModelId = resp.ModelId,
                     CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
                 };
