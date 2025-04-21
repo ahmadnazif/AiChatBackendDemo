@@ -351,7 +351,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 yield break;
             }
 
-            if(req.FileStream == null)
+            if (req.FileStream == null)
             {
                 logger.LogError($"File stream is required");
                 yield break;
@@ -400,7 +400,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
-    public async IAsyncEnumerable<StreamingChatResponse> StreamFileChat2Async(FileChatRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<StreamingChatResponse> StreamFileChatNewAsync(ChatRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         try
         {
@@ -418,45 +418,65 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 yield break;
             }
 
-            if (req.Prompt == null)
+            if (req.Latest == null)
             {
-                logger.LogError($"{nameof(req.Prompt)} is NULL and it is required");
+                logger.LogError($"{nameof(req.Latest)} is NULL and it is required");
                 yield break;
             }
 
-            if (string.IsNullOrWhiteSpace(req.Prompt.Text))
+            if (string.IsNullOrWhiteSpace(req.Latest.Message.Text))
             {
-                logger.LogError($"{nameof(req.Prompt.Text)} is NULL and it is required");
+                logger.LogError($"{nameof(req.Latest.Message.Text)} is NULL and it is required");
                 yield break;
             }
 
-            if (req.FileStream == null)
+            logger.LogInformation($"Prompt: {req.Latest.Message.Text}");
+            logger.LogInformation($"FileCount: {req.Latest.Files.Count}");
+
+            List<ChatMessage> chatMessages = [];
+            if (req.Previous.Count == 0)
             {
-                logger.LogError($"File stream is required");
-                yield break;
+                List<DataContent> dataContents = [];
+                foreach (var file in req.Latest.Files)
+                    dataContents.Add(new(file.FileStream, file.MediaType));
+
+                chatMessages.Add(new()
+                {
+                    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
+                    Text = req.Latest.Message.Text,
+                    Contents = [.. dataContents]
+                });
             }
-
-            logger.LogInformation($"Prompt: {req.Prompt}");
-
-            ChatMessage chatMessage = new()
+            else
             {
-                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                Text = req.Prompt.Text
-            };
+                foreach (var m in req.Previous)
+                {
+                    List<DataContent> dataContents = [];
+                    foreach (var file in m.Files)
+                        dataContents.Add(new(file.FileStream, file.MediaType));
 
-            logger.LogInformation((req.FileStream == null) ? "Filestream is NULL" : $"Filestream length: {req.FileStream.Length}");
-            logger.LogInformation(string.IsNullOrWhiteSpace(req.MediaType) ? "Filestream is NULL" : $"Filestream mediatype: {req.MediaType}");
+                    chatMessages.Add(new()
+                    {
+                        Role = ChatHelper.GetChatRole(m.Message.Sender),
+                        Text = m.Message.Text,
+                        Contents = [.. dataContents]
+                    });
+                }
 
-            chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
+                chatMessages.Add(new()
+                {
+                    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
+                    Text = req.Latest.Message.Text
+                });
+            }
 
             var id = Generator.NextStreamingId();
             logger.LogInformation($"Streaming: {id}");
 
-            await foreach (var resp in client.GetStreamingResponseAsync(chatMessage, cancellationToken: ct))
+            await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
             {
                 var hasFinished = resp.FinishReason.HasValue;
                 var txt = resp.Text;
-                //logger.LogInformation($"ID: {id} | {txt}");
                 yield return new()
                 {
                     StreamingId = id,
