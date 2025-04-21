@@ -400,6 +400,85 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         }
     }
 
+    public async IAsyncEnumerable<StreamingChatResponse> StreamFileChat2Async(FileChatRequest req, [EnumeratorCancellation] CancellationToken ct)
+    {
+        try
+        {
+            var username = cache.FindUsername(Context);
+
+            if (username == null)
+            {
+                logger.LogWarning($"Username {username} not found in cache");
+                yield break;
+            }
+
+            if (req == null)
+            {
+                logger.LogError($"{nameof(req)} is NULL");
+                yield break;
+            }
+
+            if (req.Prompt == null)
+            {
+                logger.LogError($"{nameof(req.Prompt)} is NULL and it is required");
+                yield break;
+            }
+
+            if (string.IsNullOrWhiteSpace(req.Prompt.Text))
+            {
+                logger.LogError($"{nameof(req.Prompt.Text)} is NULL and it is required");
+                yield break;
+            }
+
+            if (req.FileStream == null)
+            {
+                logger.LogError($"File stream is required");
+                yield break;
+            }
+
+            logger.LogInformation($"Prompt: {req.Prompt}");
+
+            ChatMessage chatMessage = new()
+            {
+                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                Text = req.Prompt.Text
+            };
+
+            logger.LogInformation((req.FileStream == null) ? "Filestream is NULL" : $"Filestream length: {req.FileStream.Length}");
+            logger.LogInformation(string.IsNullOrWhiteSpace(req.MediaType) ? "Filestream is NULL" : $"Filestream mediatype: {req.MediaType}");
+
+            chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
+
+            var id = Generator.NextStreamingId();
+            logger.LogInformation($"Streaming: {id}");
+
+            await foreach (var resp in client.GetStreamingResponseAsync(chatMessage, cancellationToken: ct))
+            {
+                var hasFinished = resp.FinishReason.HasValue;
+                var txt = resp.Text;
+                //logger.LogInformation($"ID: {id} | {txt}");
+                yield return new()
+                {
+                    StreamingId = id,
+                    HasFinished = hasFinished,
+                    Message = new(ChatSender.Assistant, txt),
+                    ModelId = resp.ModelId,
+                    CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+                };
+
+                if (hasFinished)
+                {
+                    logger.LogInformation($"Streaming {id} completed");
+                }
+            }
+        }
+        finally
+        {
+            if (ct.IsCancellationRequested)
+                logger.LogInformation($"Streaming cancelled at {DateTime.Now.ToLongTimeString()}");
+        }
+    }
+
 
     private void LogSent(ChatResponse resp, Stopwatch sw)
     {
