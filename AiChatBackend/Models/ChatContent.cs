@@ -1,6 +1,6 @@
 ﻿namespace AiChatBackend.Models;
 
-public class ChatData
+public class ChatContent
 {
     public ChatMsg Message { get; set; }
     public List<ChatFile> Files { get; set; }
