@@ -365,6 +365,9 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 Text = req.Prompt.Text
             };
 
+            logger.LogInformation((req.FileStream == null) ? "Filestream is NULL" : $"Filestream length: {req.FileStream.Length}");
+            logger.LogInformation(string.IsNullOrWhiteSpace(req.MediaType) ? "Filestream is NULL" : $"Filestream mediatype: {req.MediaType}");
+
             chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
 
             var id = Generator.NextStreamingId();
