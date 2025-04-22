@@ -37,4 +37,12 @@ public static class ChatHelper
 
         return list;
     }
+
+    public static string GetFileInfo(List<ChatFile> files)
+    {
+        if (files == null || files.Count == 0)
+            return "No file attached";
+
+        return $"{files.Count} {(files.Count > 1 ? "files" : "file")} attached";
+    }
 }

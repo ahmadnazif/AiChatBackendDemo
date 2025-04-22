@@ -431,7 +431,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             }
 
             logger.LogInformation($"Prompt: {req.Latest.Message.Text}");
-            logger.LogInformation($"FileCount: {req.Latest.Files.Count}");
+            logger.LogInformation($"File: {ChatHelper.GetFileInfo(req.Latest.Files)}");
 
             List<ChatMessage> chatMessages = [];
             if (req.Previous.Count == 0)
