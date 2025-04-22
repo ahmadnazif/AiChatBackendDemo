@@ -430,8 +430,9 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 yield break;
             }
 
-            logger.LogInformation($"Prompt: {req.Latest.Message.Text}");
-            logger.LogInformation($"File: {ChatHelper.GetFileInfo(req.Latest.Files)}");
+            logger.LogInformation($"PROMPT: {req.Latest.Message.Text} | ATTACHEMENT: {ChatHelper.GetFileInfo(req.Latest.Files)}");
+            foreach (var file in req.Latest.Files)
+                logger.LogInformation($"-- File: {file.Filename} ({file.MediaType})");
 
             List<ChatMessage> chatMessages = [];
             if (req.Previous.Count == 0)
@@ -451,22 +452,27 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             {
                 foreach (var m in req.Previous)
                 {
-                    List<DataContent> dataContents = [];
+                    List<DataContent> prevDataContents = [];
                     foreach (var file in m.Files)
-                        dataContents.Add(new(file.FileStream, file.MediaType));
+                        prevDataContents.Add(new(file.FileStream, file.MediaType));
 
                     chatMessages.Add(new()
                     {
                         Role = ChatHelper.GetChatRole(m.Message.Sender),
                         Text = m.Message.Text,
-                        Contents = [.. dataContents]
+                        Contents = [.. prevDataContents]
                     });
                 }
+
+                List<DataContent> latestDataContents = [];
+                foreach (var file in req.Latest.Files)
+                    latestDataContents.Add(new(file.FileStream, file.MediaType));
 
                 chatMessages.Add(new()
                 {
                     Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
-                    Text = req.Latest.Message.Text
+                    Text = req.Latest.Message.Text,
+                    Contents = [.. latestDataContents]
                 });
             }
 
