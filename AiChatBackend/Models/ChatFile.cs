@@ -1,3 +1,3 @@
 ﻿namespace AiChatBackend.Models;
 
-public record ChatFile(byte[] FileStream, string MediaType);
+public record ChatFile(string Filename, byte[] FileStream, string MediaType);
