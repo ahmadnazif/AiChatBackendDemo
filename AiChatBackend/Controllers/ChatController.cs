@@ -48,23 +48,4 @@ public class ChatController(ILogger<ChatController> logger, IChatClient chatClie
 
         logger.LogInformation(JsonSerializer.Serialize(r));
     }
-
-    [HttpPost("generate-embedding")]
-    public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
-    {
-        var result = await vector.GenerateEmbeddingAsync(text, ct);
-        if (result == null)
-        {
-            return "Error";
-        }
-
-        return JsonSerializer.Serialize(new
-        {
-            result.Vector.Length,
-            result.ModelId,
-            result.CreatedAt,
-            Vector = result.Vector.ToArray()
-        });
-    }
-
 }

@@ -10,7 +10,7 @@ public class FoodVectorModel : FoodVectorModelBase
 
 public class FoodVectorModelBase
 {
-    //[VectorStoreRecordKey] public int Id { get; set; }
+    [VectorStoreRecordKey] public int Id { get; set; }
 
     [VectorStoreRecordData] public string FoodName { get; set; }
 
