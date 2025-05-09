@@ -18,9 +18,10 @@ builder.Services.AddChatClient(x =>
 {
     const string ollama = "Ollama";
     var endpoint = config[$"{ollama}:Endpoint"];
-    var model = config[$"{ollama}:Model"];
+    var textModel = config[$"{ollama}:TextModel"];
+    var visionModel = config[$"{ollama}:VisionModel"];
 
-    return new OllamaChatClient(endpoint, model);
+    return new OllamaChatClient(endpoint, textModel);
 });
 
 //builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
