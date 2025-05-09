@@ -6,18 +6,17 @@ using System.Threading.Tasks;
 
 namespace AiChatBackend.Services;
 
-public class QdrantService(ILogger<QdrantService> logger, IConfiguration config)
+public class QdrantService(ILogger<QdrantService> logger, QdrantClient client)
 {
     private readonly ILogger<QdrantService> logger = logger;
-    private readonly string host = config["Qdrant:Host"];
-    private readonly int port = int.Parse(config["Qdrant:Port"]);
+    private readonly QdrantClient client = client;
 
     public async Task<bool> IsCollectionExistAsync(string collectionName, CancellationToken ct = default)
     {
         try
         {
-            using var client = new QdrantClient(host, port);
-            return await client.CollectionExistsAsync(collectionName, ct);
+            var store = new QdrantVectorStore(client);
+            return await store.CollectionExistsAsync(collectionName, ct);
         }
         catch (Exception ex)
         {
@@ -30,8 +29,6 @@ public class QdrantService(ILogger<QdrantService> logger, IConfiguration config)
     {
         try
         {
-            using var client = new QdrantClient(host, port);
-
             if (await IsCollectionExistAsync(collectionName, ct))
                 return new() { IsSuccess = false, Message = "Collection already exist" };
 
@@ -53,8 +50,7 @@ public class QdrantService(ILogger<QdrantService> logger, IConfiguration config)
     {
         try
         {
-            using var client = new QdrantClient(host, port);
-            var qvs = new QdrantVectorStore(client);
+            var store = new QdrantVectorStore(client);
 
             if (!await IsCollectionExistAsync(collectionName, ct))
             {

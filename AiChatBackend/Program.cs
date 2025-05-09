@@ -8,6 +8,7 @@ using AiChatBackend.Hubs;
 using AiChatBackend.ServiceExtensions;
 using Microsoft.Extensions.AI;
 using AiChatBackend.Services;
+using Microsoft.SemanticKernel;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -21,6 +22,7 @@ builder.Services.AddChatClient(x =>
     return new OllamaChatClient(endpoint, model);
 });
 
+builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
 builder.Services.AddScoped<QdrantService>();
 
 builder.Services.AddHttpClient();
