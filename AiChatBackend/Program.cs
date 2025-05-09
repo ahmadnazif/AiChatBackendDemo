@@ -24,6 +24,8 @@ builder.Services.AddChatClient(x =>
 });
 
 //builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
+
+builder.Services.AddInMemoryVectorStore();
 builder.Services.AddScoped<IVectorStorage, InMemoryVectorDb>();
 
 //#pragma warning disable SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
