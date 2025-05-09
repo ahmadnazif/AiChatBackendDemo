@@ -12,20 +12,6 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
     private readonly InMemoryVectorStore store = store;
     private const string COLL_FOOD = "food";
 
-    public async Task<Embedding<float>> GenerateEmbeddingAsync(string text, CancellationToken ct = default)
-    {
-        try
-        {
-            return await gen.GenerateAsync(text, cancellationToken: ct);
-
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.Message);
-            return null;
-        }
-    }
-
     public async Task<ResponseBase> UpsertFoodAsync(FoodVectorModelBase food, CancellationToken ct)
     {
         try

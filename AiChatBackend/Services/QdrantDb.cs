@@ -8,103 +8,105 @@ using Microsoft.SemanticKernel;
 
 namespace AiChatBackend.Services;
 
-public class QdrantDb(ILogger<QdrantDb> logger, OllamaEmbeddingGenerator gen)
+public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen) : IVectorStorage
 {
     private readonly ILogger<QdrantDb> logger = logger;
-    //private readonly QdrantClient client = client;
+    private readonly IVectorStore store = store;
     private readonly OllamaEmbeddingGenerator gen = gen;
+    private const string COLL_FOOD = "food";
 
-    //public async Task<bool> IsCollectionExistAsync(string collectionName, CancellationToken ct = default)
-    //{
-    //    try
-    //    {
-    //        var store = new QdrantVectorStore(client);
-    //        return await store.CollectionExistsAsync(collectionName, ct);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        logger.LogError(ex.Message);
-    //        return false;
-    //    }
-    //}
-
-    //public async Task<ResponseBase> CreateCollectionAsync(string collectionName, CancellationToken ct = default)
-    //{
-    //    try
-    //    {
-    //        if (await IsCollectionExistAsync(collectionName, ct))
-    //            return new() { IsSuccess = false, Message = "Collection already exist" };
-
-    //        await client.CreateCollectionAsync(collectionName, vectorsConfig: new VectorParams()
-    //        {
-    //            Size = 100,
-    //            Distance = Distance.Cosine
-    //        }, cancellationToken: ct);
-
-    //        return new() { IsSuccess = true };
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return new() { IsSuccess = false, Message = ex.Message };
-    //    }
-    //}
-
-    public async Task<Embedding<float>> GenerateEmbeddingAsync(string text, CancellationToken ct = default)
+    public async Task<ResponseBase> UpsertFoodAsync(FoodVectorModelBase food, CancellationToken ct)
     {
-
-
         try
         {
-            return await gen.GenerateAsync(text, cancellationToken: ct);
+            var coll = store.GetCollection<int, FoodVectorModel>(COLL_FOOD);
+            await coll.CreateCollectionIfNotExistsAsync(ct);
 
+            var id = await coll.UpsertAsync(new FoodVectorModel
+            {
+                Id = food.Id,
+                FoodName = food.FoodName,
+                Remarks = food.Remarks,
+                Vector = await gen.GenerateVectorAsync(food.Remarks, cancellationToken: ct)
+            }, ct);
+
+            return new()
+            {
+                IsSuccess = true,
+                Message = id.ToString()
+            };
         }
         catch (Exception ex)
         {
             logger.LogError(ex.Message);
-            return null;
+            return new()
+            {
+                IsSuccess = false,
+                Message = ex.Message
+            };
         }
     }
 
-    //public async Task<ResponseBase> UpsertAsync(string collectionName, CancellationToken ct = default)
-    //{
-    //    try
-    //    {
-    //        var store = new QdrantVectorStore(client);
+    public async Task<ResponseBase> UpsertFoodsAsync(List<FoodVectorModelBase> foods, CancellationToken ct)
+    {
+        try
+        {
+            var coll = store.GetCollection<int, FoodVectorModel>(COLL_FOOD);
+            await coll.CreateCollectionIfNotExistsAsync(ct);
 
-    //        if (!await IsCollectionExistAsync(collectionName, ct))
-    //        {
-    //            var resp = await CreateCollectionAsync(collectionName, ct);
-    //            if (!resp.IsSuccess)
-    //                return resp;
-    //        }
+            List<int> ids = [];
 
-    //        List<PointStruct> points = [];
-    //        PointStruct ps = new()
-    //        {
+            foreach (var food in foods)
+            {
+                var id = await coll.UpsertAsync(new FoodVectorModel
+                {
+                    //Id = food.Id,
+                    FoodName = food.FoodName,
+                    Remarks = food.Remarks,
+                    Vector = await gen.GenerateVectorAsync(food.Remarks)
+                }, ct);
 
-    //        };
+                ids.Add(id);
+            }
 
+            return new()
+            {
+                IsSuccess = true,
+                Message = JsonSerializer.Serialize(ids)
+            };
+        }
+        catch (Exception ex)
+        {
+            return new()
+            {
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
 
-    //        var upsertResp = await client.UpsertAsync(collectionName, points, cancellationToken: ct);
-    //        var r = new
-    //        {
-    //            upsertResp.HasOperationId,
-    //            upsertResp.Status,
-    //            upsertResp.OperationId
-    //        };
+    public async Task QueryFoodsAsync(string prompt, CancellationToken ct)
+    {
+        try
+        {
+            var coll = store.GetCollection<int, FoodVectorModel>(COLL_FOOD);
+            await coll.CreateCollectionIfNotExistsAsync(ct);
 
-    //        return new()
-    //        {
-    //            IsSuccess = upsertResp.Status != UpdateStatus.ClockRejected || upsertResp.Status != UpdateStatus.UnknownUpdateStatus,
-    //            Message = JsonSerializer.Serialize(r)
-    //        };
+            var vector = await gen.GenerateVectorAsync(prompt, cancellationToken: ct);
 
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return new() { IsSuccess = false, Message = ex.Message };
-    //    }
-    //}
+            var result = coll.SearchEmbeddingAsync(vector, 1, cancellationToken: ct);
+
+            await foreach (var r in result)
+            {
+                logger.LogInformation($"{r.Record.FoodName} [{r.Score}]");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+        }
+    }
+
 
 
 }

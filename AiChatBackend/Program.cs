@@ -10,6 +10,7 @@ using AiChatBackend.ServiceExtensions;
 using Microsoft.Extensions.AI;
 using AiChatBackend.Services;
 using Microsoft.SemanticKernel;
+using Qdrant.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -24,10 +25,15 @@ builder.Services.AddChatClient(x =>
     return new OllamaChatClient(endpoint, textModel);
 });
 
-//builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
+// DB: Qdrant
+builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
+//builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"])));
+//builder.Services.AddQdrantVectorStore();
+builder.Services.AddScoped<IVectorStorage, QdrantDb>();
 
-builder.Services.AddInMemoryVectorStore();
-builder.Services.AddScoped<IVectorStorage, InMemoryVectorDb>();
+// DB: InMemory
+//builder.Services.AddInMemoryVectorStore();
+//builder.Services.AddScoped<IVectorStorage, InMemoryVectorDb>();
 
 //#pragma warning disable SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 //builder.Services.AddOllamaTextEmbeddingGeneration(config["Ollama:EmbeddingModel"], new Uri(config[$"Ollama:Endpoint"]));
