@@ -8,11 +8,11 @@ namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/chat")]
 [ApiController]
-public class ChatController(ILogger<ChatController> logger, IChatClient chatClient, QdrantService qdrant) : ControllerBase
+public class ChatController(ILogger<ChatController> logger, IChatClient chatClient, IVectorStorage vector) : ControllerBase
 {
     private readonly IChatClient chatClient = chatClient;
     private readonly ILogger<ChatController> logger = logger;
-    private readonly QdrantService qdrant = qdrant;
+    private readonly IVectorStorage vector = vector;
 
     [HttpPost("send")]
     public async Task<ActionResult<string>> Send([FromBody] string prompt, CancellationToken ct)
@@ -52,7 +52,7 @@ public class ChatController(ILogger<ChatController> logger, IChatClient chatClie
     [HttpPost("generate-embedding")]
     public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
     {
-        var result = await qdrant.GenerateEmbeddingAsync(text, ct);
+        var result = await vector.GenerateEmbeddingAsync(text, ct);
         if (result == null)
         {
             return "Error";

@@ -8,7 +8,7 @@ using Microsoft.SemanticKernel;
 
 namespace AiChatBackend.Services;
 
-public class QdrantService(ILogger<QdrantService> logger, OllamaEmbeddingGenerator gen)
+public class QdrantService(ILogger<QdrantService> logger, OllamaEmbeddingGenerator gen) : IVectorStorage
 {
     private readonly ILogger<QdrantService> logger = logger;
     //private readonly QdrantClient client = client;
