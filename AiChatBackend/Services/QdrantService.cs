@@ -3,6 +3,7 @@ using Qdrant.Client.Grpc;
 using Microsoft.Extensions.VectorData;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
 
 namespace AiChatBackend.Services;
 
@@ -44,6 +45,11 @@ public class QdrantService(ILogger<QdrantService> logger, QdrantClient client)
         {
             return new() { IsSuccess = false, Message = ex.Message };
         }
+    }
+
+    public async Task Test()
+    {
+        IEmbeddingGenerator<string, Embedding<float>> generator = new OllamaEmbeddingGenerator()
     }
 
     public async Task<ResponseBase> UpsertAsync(string collectionName, CancellationToken ct = default)
