@@ -46,7 +46,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
             Username = username,
             ConnectionId = Context.ConnectionId,
             RequestMessage = new(ChatSender.User, req.Prompt.Text),
-            ResponseMessage = new(ChatSender.Assistant, resp.Message.Text),
+            ResponseMessage = new(ChatSender.Assistant, resp.Messages[0].Text), // resp.Message
             Duration = sw.Elapsed,
             ModelId = resp.ModelId
         };
