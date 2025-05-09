@@ -52,9 +52,6 @@ public class QdrantDb(ILogger<QdrantDb> logger, OllamaEmbeddingGenerator gen) : 
     public async Task<Embedding<float>> GenerateEmbeddingAsync(string text, CancellationToken ct = default)
     {
 
-        //var store = new QdrantVectorStore(client);
-        //var coll = store.GetCollection<ulong, TextVector>("text");
-        //await coll.CreateCollectionIfNotExistsAsync(ct);
 
         try
         {
