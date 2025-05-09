@@ -10,23 +10,23 @@ public class EmbeddingController(IVectorStorage vector) : ControllerBase
     private readonly IVectorStorage vector = vector;
 
 
-    [HttpPost("generate-embedding")]
-    public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
-    {
-        var result = await vector.GenerateEmbeddingAsync(text, ct);
-        if (result == null)
-        {
-            return "Error";
-        }
+    //[HttpPost("generate-embedding")]
+    //public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
+    //{
+    //    var result = await vector.GenerateEmbeddingAsync(text, ct);
+    //    if (result == null)
+    //    {
+    //        return "Error";
+    //    }
 
-        return JsonSerializer.Serialize(new
-        {
-            result.Vector.Length,
-            result.ModelId,
-            result.CreatedAt,
-            Vector = result.Vector.ToArray()
-        });
-    }
+    //    return JsonSerializer.Serialize(new
+    //    {
+    //        result.Vector.Length,
+    //        result.ModelId,
+    //        result.CreatedAt,
+    //        Vector = result.Vector.ToArray()
+    //    });
+    //}
 
     [HttpPost("feed-data")]
     public async Task<ActionResult<ResponseBase>> Feed([FromBody] FoodVectorModelBase food, CancellationToken ct)
