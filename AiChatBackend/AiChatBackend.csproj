@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.3.0-preview.1.25114.11" />
     <PackageReference Include="Microsoft.Extensions.AI.Ollama" Version="9.3.0-preview.1.25114.11" />
+    <PackageReference Include="Qdrant.Client" Version="1.14.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
   </ItemGroup>
 
