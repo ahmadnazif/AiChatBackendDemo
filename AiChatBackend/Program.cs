@@ -21,6 +21,8 @@ builder.Services.AddChatClient(x =>
     return new OllamaChatClient(endpoint, model);
 });
 
+builder.Services.AddScoped<QdrantService>();
+
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiClient>();
 
