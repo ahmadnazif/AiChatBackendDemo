@@ -88,42 +88,46 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
         if (req.PreviousMessages.Count == 0)
         {
-            chatMessages.Add(new()
-            {
-                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                Text = req.Prompt.Text
-            });
+            //chatMessages.Add(new()
+            //{
+            //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+            //    Text = req.Prompt.Text
+            //});
+            chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
         }
         else
         {
             foreach (var m in req.PreviousMessages)
             {
-                chatMessages.Add(new()
-                {
-                    Role = ChatHelper.GetChatRole(m.Sender),
-                    Text = m.Text,
-                });
+                //chatMessages.Add(new()
+                //{
+                //    Role = ChatHelper.GetChatRole(m.Sender),
+                //    Text = m.Text,
+                //});
+                chatMessages.Add(new(ChatHelper.GetChatRole(m.Sender), m.Text));
             }
 
-            chatMessages.Add(new()
-            {
-                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                Text = req.Prompt.Text
-            });
+            //chatMessages.Add(new()
+            //{
+            //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+            //    Text = req.Prompt.Text
+            //});
+
+            chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
         }
 
         Stopwatch sw = Stopwatch.StartNew();
         var resp = await client.GetResponseAsync(chatMessages);
         sw.Stop();
 
-        var sender = ChatHelper.GetChatSender(resp.Message.Role);
+        var sender = ChatHelper.GetChatSender(resp.Messages[0].Role); // resp.Message.Role
 
         ChainedChatResponse data = new()
         {
             Username = username,
             ConnectionId = Context.ConnectionId,
             PreviousMessages = ChatHelper.BuildPreviousMessages(chatMessages),
-            ResponseMessage = new(sender, resp.Message.Text),
+            ResponseMessage = new(sender, resp.Messages[0].Text), // resp.Message.Text
             Duration = sw.Elapsed,
             ModelId = resp.ModelId
         };
@@ -167,28 +171,31 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             if (req.PreviousMessages.Count == 0)
             {
-                chatMessages.Add(new()
-                {
-                    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                    Text = req.Prompt.Text
-                });
+                //chatMessages.Add(new()
+                //{
+                //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                //    Text = req.Prompt.Text
+                //});
+                chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
             else
             {
                 foreach (var m in req.PreviousMessages)
                 {
-                    chatMessages.Add(new()
-                    {
-                        Role = ChatHelper.GetChatRole(m.Sender),
-                        Text = m.Text,
-                    });
+                    //chatMessages.Add(new()
+                    //{
+                    //    Role = ChatHelper.GetChatRole(m.Sender),
+                    //    Text = m.Text,
+                    //});
+                    chatMessages.Add(new(ChatHelper.GetChatRole(m.Sender), m.Text));
                 }
 
-                chatMessages.Add(new()
-                {
-                    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                    Text = req.Prompt.Text
-                });
+                //chatMessages.Add(new()
+                //{
+                //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                //    Text = req.Prompt.Text
+                //});
+                chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
 
             var id = Generator.NextStreamingId();
@@ -261,28 +268,31 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
                 if (req.PreviousMessages.Count == 0)
                 {
-                    chatMessages.Add(new()
-                    {
-                        Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                        Text = req.Prompt.Text
-                    });
+                    //chatMessages.Add(new()
+                    //{
+                    //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                    //    Text = req.Prompt.Text
+                    //});
+                    chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
                 }
                 else
                 {
                     foreach (var m in req.PreviousMessages)
                     {
-                        chatMessages.Add(new()
-                        {
-                            Role = ChatHelper.GetChatRole(m.Sender),
-                            Text = m.Text,
-                        });
+                        //chatMessages.Add(new()
+                        //{
+                        //    Role = ChatHelper.GetChatRole(m.Sender),
+                        //    Text = m.Text,
+                        //});
+                        chatMessages.Add(new(ChatHelper.GetChatRole(m.Sender), m.Text));
                     }
 
-                    chatMessages.Add(new()
-                    {
-                        Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                        Text = req.Prompt.Text
-                    });
+                    //chatMessages.Add(new()
+                    //{
+                    //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+                    //    Text = req.Prompt.Text
+                    //});
+                    chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
                 }
 
                 var id = Generator.NextStreamingId();
@@ -359,11 +369,12 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             logger.LogInformation($"Prompt: {req.Prompt}");
 
-            ChatMessage chatMessage = new()
-            {
-                Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                Text = req.Prompt.Text
-            };
+            //ChatMessage chatMessage = new()
+            //{
+            //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
+            //    Text = req.Prompt.Text
+            //};
+            ChatMessage chatMessage = new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text);
 
             logger.LogInformation((req.FileStream == null) ? "Filestream is NULL" : $"Filestream length: {req.FileStream.Length}");
             logger.LogInformation(string.IsNullOrWhiteSpace(req.MediaType) ? "Filestream is NULL" : $"Filestream mediatype: {req.MediaType}");
@@ -441,12 +452,19 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 foreach (var file in req.Latest.Files)
                     dataContents.Add(new(file.FileStream, file.MediaType));
 
-                chatMessages.Add(new()
+                //chatMessages.Add(new()
+                //{
+                //    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
+                //    Text = req.Latest.Message.Text,
+                //    Contents = [.. dataContents]
+                //});
+
+                ChatMessage chatMessage = new(ChatHelper.GetChatRole(req.Latest.Message.Sender), req.Latest.Message.Text)
                 {
-                    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
-                    Text = req.Latest.Message.Text,
                     Contents = [.. dataContents]
-                });
+                };
+
+                chatMessages.Add(chatMessage);
             }
             else
             {
@@ -456,24 +474,38 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                     foreach (var file in m.Files)
                         prevDataContents.Add(new(file.FileStream, file.MediaType));
 
-                    chatMessages.Add(new()
+                    //chatMessages.Add(new()
+                    //{
+                    //    Role = ChatHelper.GetChatRole(m.Message.Sender),
+                    //    Text = m.Message.Text,
+                    //    Contents = [.. prevDataContents]
+                    //});
+
+                    ChatMessage chatMessage = new(ChatHelper.GetChatRole(m.Message.Sender), m.Message.Text)
                     {
-                        Role = ChatHelper.GetChatRole(m.Message.Sender),
-                        Text = m.Message.Text,
                         Contents = [.. prevDataContents]
-                    });
+                    };
+
+                    chatMessages.Add(chatMessage);
                 }
 
                 List<DataContent> latestDataContents = [];
                 foreach (var file in req.Latest.Files)
                     latestDataContents.Add(new(file.FileStream, file.MediaType));
 
-                chatMessages.Add(new()
+                //chatMessages.Add(new()
+                //{
+                //    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
+                //    Text = req.Latest.Message.Text,
+                //    Contents = [.. latestDataContents]
+                //});
+
+                ChatMessage latestChatMessage = new(ChatHelper.GetChatRole(req.Latest.Message.Sender), req.Latest.Message.Text)
                 {
-                    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
-                    Text = req.Latest.Message.Text,
                     Contents = [.. latestDataContents]
-                });
+                };
+
+                chatMessages.Add(latestChatMessage);
             }
 
             var id = Generator.NextStreamingId();
@@ -509,7 +541,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
     private void LogSent(ChatResponse resp, Stopwatch sw)
     {
         var usage = resp.Usage;
-        logger.LogInformation($"Response sent. Role: {resp.Message.Role}, Input token: {usage.InputTokenCount}, Output token: {usage.OutputTokenCount}, Duration: {sw.Elapsed}");
+        logger.LogInformation($"Response sent. Role: {resp.Messages[0].Role}, Input token: {usage.InputTokenCount}, Output token: {usage.OutputTokenCount}, Duration: {sw.Elapsed}");
     }
 
 
