@@ -25,6 +25,10 @@ builder.Services.AddChatClient(x =>
 builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
 builder.Services.AddScoped<QdrantService>();
 
+#pragma warning disable SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+builder.Services.AddOllamaTextEmbeddingGeneration(config["Ollama:EmbeddingModel"], new Uri(config[$"Ollama:Endpoint"]));
+#pragma warning restore SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiClient>();
 
