@@ -1,6 +1,7 @@
 global using System.Text.Json;
 global using AiChatBackend.Enums;
 global using AiChatBackend.Models;
+global using AiChatBackend.VectorModels;
 global using static AiChatBackend.Constants;
 global using AiChatBackend.Helpers;
 using AiChatBackend.Caches;
@@ -22,12 +23,21 @@ builder.Services.AddChatClient(x =>
     return new OllamaChatClient(endpoint, model);
 });
 
-builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
+//builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
 builder.Services.AddScoped<QdrantService>();
 
-#pragma warning disable SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-builder.Services.AddOllamaTextEmbeddingGeneration(config["Ollama:EmbeddingModel"], new Uri(config[$"Ollama:Endpoint"]));
-#pragma warning restore SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+//#pragma warning disable SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+//builder.Services.AddOllamaTextEmbeddingGeneration(config["Ollama:EmbeddingModel"], new Uri(config[$"Ollama:Endpoint"]));
+//builder.Services.AddTransient(sp => new Kernel(sp));
+
+builder.Services.AddSingleton(x =>
+{
+    const string ollama = "Ollama";
+    var endpoint = config[$"{ollama}:Endpoint"];
+    var model = config[$"{ollama}:EmbeddingModel"];
+
+    return new OllamaEmbeddingGenerator(endpoint, model);
+});
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiClient>();

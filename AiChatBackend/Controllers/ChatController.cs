@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AiChatBackend.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -7,10 +8,11 @@ namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/chat")]
 [ApiController]
-public class ChatController(IChatClient chatClient, ILogger<ChatController> logger) : ControllerBase
+public class ChatController(ILogger<ChatController> logger, IChatClient chatClient, QdrantService qdrant) : ControllerBase
 {
     private readonly IChatClient chatClient = chatClient;
     private readonly ILogger<ChatController> logger = logger;
+    private readonly QdrantService qdrant = qdrant;
 
     [HttpPost("send")]
     public async Task<ActionResult<string>> Send([FromBody] string prompt, CancellationToken ct)
@@ -25,7 +27,7 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
             sw.Stop();
 
             Log(resp, sw.Elapsed);
-            return resp.Message.Text;
+            return resp.Messages[0].Text;
         }
         catch (Exception ex)
         {
@@ -37,7 +39,7 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
     {
         var r = new
         {
-            ChoiceCount = resp.Choices.Count,
+            ChoiceCount = resp.Messages.Count, //resp.Choices.Count,
             resp.ModelId,
             resp.Usage.InputTokenCount,
             resp.Usage.OutputTokenCount,
@@ -47,17 +49,22 @@ public class ChatController(IChatClient chatClient, ILogger<ChatController> logg
         logger.LogInformation(JsonSerializer.Serialize(r));
     }
 
-    [HttpPost("stream")]
-    public async IAsyncEnumerable<string> Stream([FromQuery] string? prompt, [EnumeratorCancellation] CancellationToken ct)
+    [HttpPost("generate-embedding")]
+    public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
     {
-        List<ChatMessage> msg = [];
-        msg.Add(new ChatMessage(ChatRole.User, prompt));
-
-        await foreach (var x in chatClient.GetStreamingResponseAsync(msg, cancellationToken: ct))
+        var result = await qdrant.GenerateEmbeddingAsync(text, ct);
+        if (result == null)
         {
-            var txt = x.Text;
-            logger.LogInformation($"{txt} | {x.ChatThreadId} |");
-            yield return txt;
+            return "Error";
         }
+
+        return JsonSerializer.Serialize(new
+        {
+            result.Vector.Length,
+            result.ModelId,
+            result.CreatedAt,
+            Vector = result.Vector.ToArray()
+        });
     }
+
 }
