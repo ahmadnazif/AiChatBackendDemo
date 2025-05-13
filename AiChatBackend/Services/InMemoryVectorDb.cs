@@ -16,12 +16,12 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
     {
         try
         {
-            var coll = store.GetCollection<int, FoodVectorModel>(COLL_FOOD);
+            var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
             await coll.CreateCollectionIfNotExistsAsync(ct);
 
             var id = await coll.UpsertAsync(new FoodVectorModel
             {
-                Id = food.Id,
+                Id = Guid.NewGuid(),
                 FoodName = food.FoodName,
                 Remarks = food.Remarks,
                 Vector = await gen.GenerateVectorAsync(food.Remarks)
@@ -45,49 +45,49 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
     }
 
 
-    public async Task<ResponseBase> UpsertFoodsAsync(List<FoodVectorModelBase> foods, CancellationToken ct)
-    {
-        try
-        {
-            var coll = store.GetCollection<int, FoodVectorModel>(COLL_FOOD);
-            await coll.CreateCollectionIfNotExistsAsync(ct);
+    //public async Task<ResponseBase> UpsertFoodsAsync(List<FoodVectorModelBase> foods, CancellationToken ct)
+    //{
+    //    try
+    //    {
+    //        var coll = store.GetCollection<ulong, FoodVectorModel>(COLL_FOOD);
+    //        await coll.CreateCollectionIfNotExistsAsync(ct);
 
-            List<int> ids = [];
+    //        List<ulong> ids = [];
 
-            foreach (var food in foods)
-            {
-                var id = await coll.UpsertAsync(new FoodVectorModel
-                {
-                    //Id = food.Id,
-                    FoodName = food.FoodName,
-                    Remarks = food.Remarks,
-                    Vector = await gen.GenerateVectorAsync(food.Remarks)
-                }, ct);
+    //        foreach (var food in foods)
+    //        {
+    //            var id = await coll.UpsertAsync(new FoodVectorModel
+    //            {
+    //                Id = 1, //Guid.NewGuid(),
+    //                FoodName = food.FoodName,
+    //                Remarks = food.Remarks,
+    //                Vector = await gen.GenerateVectorAsync(food.Remarks)
+    //            }, ct);
 
-                ids.Add(id);
-            }
+    //            ids.Add(id);
+    //        }
 
-            return new()
-            {
-                IsSuccess = true,
-                Message = JsonSerializer.Serialize(ids)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new()
-            {
-                IsSuccess = false,
-                Message = ex.Message
-            };
-        }
-    }
+    //        return new()
+    //        {
+    //            IsSuccess = true,
+    //            Message = JsonSerializer.Serialize(ids)
+    //        };
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return new()
+    //        {
+    //            IsSuccess = false,
+    //            Message = ex.Message
+    //        };
+    //    }
+    //}
 
     public async Task QueryFoodsAsync(string prompt, CancellationToken ct)
     {
         try
         {
-            var coll = store.GetCollection<int, FoodVectorModel>(COLL_FOOD);
+            var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
             await coll.CreateCollectionIfNotExistsAsync(ct);
 
             var vector = await gen.GenerateVectorAsync(prompt, cancellationToken: ct);

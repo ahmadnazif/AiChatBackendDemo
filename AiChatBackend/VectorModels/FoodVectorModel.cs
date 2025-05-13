@@ -4,13 +4,13 @@ namespace AiChatBackend.VectorModels;
 
 public class FoodVectorModel : FoodVectorModelBase
 {
+    [VectorStoreRecordKey] public Guid Id { get; set; }
 
-    [VectorStoreRecordVector(384, DistanceFunction = DistanceFunction.CosineDistance)]
+    [VectorStoreRecordVector(768, DistanceFunction = DistanceFunction.CosineSimilarity, IndexKind = IndexKind.Hnsw)]
     public ReadOnlyMemory<float> Vector { get; set; }}
 
 public class FoodVectorModelBase
 {
-    [VectorStoreRecordKey] public Guid Id { get; set; }
 
     [VectorStoreRecordData] public string FoodName { get; set; }
 
