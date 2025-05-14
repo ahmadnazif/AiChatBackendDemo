@@ -2,9 +2,10 @@
 
 namespace AiChatBackend.Services;
 
-public class ApiClient(ILogger<ApiClient> logger, IHttpClientFactory fac)
+public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpClientFactory fac)
 {
     private readonly ILogger<ApiClient> logger = logger;
+    private readonly IConfiguration config = config;
     private readonly IHttpClientFactory fac = fac;
     private readonly TimeSpan httpClientTimeout = TimeSpan.FromSeconds(3);
 
@@ -58,4 +59,32 @@ public class ApiClient(ILogger<ApiClient> logger, IHttpClientFactory fac)
             return "Error";
         }
     }
+
+    public async Task<List<RecipeVectorModel>> ListRecipesAsync()
+    {
+        try
+        {
+            var baseUrl = $"{config["ExternalApis:DummyJson"]}";
+
+            var httpClient = fac.CreateClient();
+            httpClient.BaseAddress = new(baseUrl);
+            httpClient.Timeout = httpClientTimeout;
+            var resp = await httpClient.GetAsync("recipes");
+
+            if (resp.IsSuccessStatusCode)
+                return await resp.Content.ReadFromJsonAsync<List<VectorModels.RecipeVectorModel>>();
+
+            else
+            {
+                logger.LogError(resp.StatusCode.ToString());
+                return [];
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+            return [];
+        }
+    }
+
 }

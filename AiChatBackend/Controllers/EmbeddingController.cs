@@ -6,10 +6,10 @@ namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/embedding")]
 [ApiController]
-public class EmbeddingController(IVectorStorage vector) : ControllerBase
+public class EmbeddingController(IVectorStorage vector, ApiClient api) : ControllerBase
 {
     private readonly IVectorStorage vector = vector;
-
+    private readonly ApiClient api = api;
 
     //[HttpPost("generate-embedding")]
     //public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
@@ -46,6 +46,14 @@ public class EmbeddingController(IVectorStorage vector) : ControllerBase
             yield return r;
         }
     }
+
+    #region Recipe
+    [HttpGet("recipe/list-all")]
+    public async Task<ActionResult<List<RecipeVectorModel>>> RecipeListAllFromExternalApi(CancellationToken ct)
+    {
+        return await api.ListRecipesAsync();
+    }
+    #endregion
 
     [HttpGet("list-collection-names")]
     public async IAsyncEnumerable<string> ListCollectionNames([EnumeratorCancellation] CancellationToken ct)
