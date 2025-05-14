@@ -5,6 +5,7 @@ using Microsoft.SemanticKernel.Connectors.Qdrant;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
+using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
@@ -107,6 +108,12 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
         }
     }
 
-
-
+    public async IAsyncEnumerable<string> ListCollectionNamesAsync([EnumeratorCancellation] CancellationToken ct)
+    {
+        await foreach (var name in store.ListCollectionNamesAsync(ct))
+        {
+            logger.LogInformation($"{name}");
+            yield return name;
+        }
+    }
 }

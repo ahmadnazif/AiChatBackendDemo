@@ -5,7 +5,7 @@ using Microsoft.SemanticKernel.Connectors.InMemory;
 
 namespace AiChatBackend.Services;
 
-public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingGenerator gen, InMemoryVectorStore store) : IVectorStorage
+public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingGenerator gen, InMemoryVectorStore store)
 {
     private readonly ILogger<InMemoryVectorDb> logger = logger;
     private readonly OllamaEmbeddingGenerator gen = gen;
