@@ -1,5 +1,6 @@
 ﻿using AiChatBackend.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Controllers;
 
@@ -39,5 +40,14 @@ public class EmbeddingController(IVectorStorage vector) : ControllerBase
     {
         await vector.QueryAsync(prompt, ct);
         return Ok();
+    }
+
+    [HttpGet("list-collection-names")]
+    public async IAsyncEnumerable<string> ListCollectionNames([EnumeratorCancellation] CancellationToken ct)
+    {
+        await foreach (var cn in vector.ListCollectionNamesAsync(ct))
+        {
+            yield return cn;
+        }
     }
 }
