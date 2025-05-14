@@ -13,6 +13,6 @@ public interface IVectorStorage
 
     #region Recipe
     Task<ResponseBase> UpsertRecipesAsync(List<RecipeVectorModelBase> data, CancellationToken ct = default);
-    IAsyncEnumerable<string> QueryRecipeAsync(EmbeddingQueryRequest req, CancellationToken ct = default);
+    Task<string> QueryRecipeAsync(EmbeddingQueryRequest req, CancellationToken ct = default);
     #endregion
 }

@@ -48,6 +48,8 @@ builder.Services.AddSingleton(x =>
     return new OllamaEmbeddingGenerator(endpoint, model);
 });
 
+builder.Services.AddScoped<LlmService>();
+
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiClient>();
 

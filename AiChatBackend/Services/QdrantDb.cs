@@ -8,17 +8,21 @@ using Microsoft.SemanticKernel;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using OllamaSharp.Models;
+using System.Text;
 
 namespace AiChatBackend.Services;
 
-public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen) : IVectorStorage
+public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen, LlmService chat) : IVectorStorage
 {
     private readonly ILogger<QdrantDb> logger = logger;
     private readonly IVectorStore store = store;
     private readonly OllamaEmbeddingGenerator gen = gen;
+    private readonly LlmService chat = chat;
+
     private const string COLL_FOOD = "food";
     private const string COLL_RECIPE = "recipe";
 
+    #region Food
     public async Task<ResponseBase> UpsertFoodAsync(FoodVectorModelBase food, CancellationToken ct)
     {
         try
@@ -113,8 +117,26 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
             yield return name;
         }
     }
+    #endregion
 
     #region Recipe
+
+    private string GenerateEmbeddingInputString(RecipeVectorModelBase model)
+    {
+        return $"""
+                        Name: {model.Name}
+                        Ingredients: {string.Join(", ", model.Ingredients.Where(i => !string.IsNullOrWhiteSpace(i)))}
+                        Instructions: {string.Join(" ", model.Instructions.Where(i => !string.IsNullOrWhiteSpace(i)))}
+                        Tags: {string.Join(", ", model.Tags.Where(t => !string.IsNullOrWhiteSpace(t)))}
+                        Meal Type: {string.Join(", ", model.MealType.Where(t => !string.IsNullOrWhiteSpace(t)))}
+                        Difficulty: {model.Difficulty}
+                        Cuisine: {model.Cuisine}
+                        Rating: {model.Rating}
+                        Prep Time: {model.PrepTimeMinutes} minutes
+                        Cook Time: {model.CookTimeMinutes} minutes
+                        Calories: {model.CaloriesPerServing}
+                        """;
+    }
 
     public async Task<ResponseBase> UpsertRecipesAsync(List<RecipeVectorModelBase> data, CancellationToken ct)
     {
@@ -128,20 +150,6 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
             Stopwatch sw = Stopwatch.StartNew();
             foreach (var model in data)
             {
-                var input = $"""
-                        Name: {model.Name}
-                        Ingredients: {string.Join(", ", model.Ingredients.Where(i => !string.IsNullOrWhiteSpace(i)))}
-                        Instructions: {string.Join(" ", model.Instructions.Where(i => !string.IsNullOrWhiteSpace(i)))}
-                        Tags: {string.Join(", ", model.Tags.Where(t => !string.IsNullOrWhiteSpace(t)))}
-                        Meal Type: {string.Join(", ", model.MealType.Where(t => !string.IsNullOrWhiteSpace(t)))}
-                        Difficulty: {model.Difficulty}
-                        Cuisine: {model.Cuisine}
-                        Rating: {model.Rating}
-                        Prep Time: {model.PrepTimeMinutes} minutes
-                        Cook Time: {model.CookTimeMinutes} minutes
-                        Calories: {model.CaloriesPerServing}
-                        """;
-
                 Stopwatch swi = Stopwatch.StartNew();
                 var id = await coll.UpsertAsync(new RecipeVectorModel
                 {
@@ -158,7 +166,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
                     PrepTimeMinutes = model.PrepTimeMinutes,
                     Rating = model.Rating,
                     Tags = model.Tags,
-                    Vector = await gen.GenerateVectorAsync(input, cancellationToken: ct),
+                    Vector = await gen.GenerateVectorAsync(GenerateEmbeddingInputString(model), cancellationToken: ct),
                 }, ct);
 
                 swi.Stop();
@@ -183,20 +191,50 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
         }
     }
 
-    public async IAsyncEnumerable<string> QueryRecipeAsync(EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async Task<string> QueryRecipeAsync(EmbeddingQueryRequest req, CancellationToken ct)
     {
         var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
         await coll.CreateCollectionIfNotExistsAsync(ct);
 
+        logger.LogInformation("Generating prompt as vector..");
         var vector = await gen.GenerateVectorAsync(req.Prompt, cancellationToken: ct);
 
+        logger.LogInformation("Search in DB..");
         var result = coll.SearchEmbeddingAsync(vector, req.Top, cancellationToken: ct);
 
+        // 1: Build context
+        // -----------------
+        logger.LogInformation("Building context from result..");
+        StringBuilder sb = new();
         await foreach (var r in result)
         {
-            var val = $"[{r.Record.Id}] {r.Record.Name}, {r.Record.Difficulty} [{r.Score}]";
-            yield return val;
+            sb.AppendLine(GenerateEmbeddingInputString(r.Record));
+            sb.AppendLine();
         }
+
+        // 2: Compose prompt to LLM
+        // -------------------------
+
+        var prompt = $"""
+            You are a helpful recipe assistant.
+            Here are some recipes from the database:
+            {sb}
+            Answer this user query using information above:
+            "{req.Prompt}"
+            """;
+
+        logger.LogInformation("Sending to LLM for processing..");
+        var resp = await chat.SendAsync(ChatRole.User, prompt);
+        logger.LogInformation($"Response generated");
+
+        return resp;
+
+        //// KIV
+        //await foreach (var r in result)
+        //{
+        //    var val = $"[{r.Record.Id}] {r.Record.Name}, {r.Record.Difficulty} [{r.Score}]";
+        //    yield return val;
+        //}
     }
 
 

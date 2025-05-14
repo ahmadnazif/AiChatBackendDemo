@@ -77,15 +77,17 @@ public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorSto
     }
 
     [HttpPost("recipe/query")]
-    public async IAsyncEnumerable<string> RecipeQuery([FromBody] EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async Task<ActionResult<string>> RecipeQuery([FromBody] EmbeddingQueryRequest req, CancellationToken ct)
     {
         if (req.Top < 1)
             req.Top = 1;
 
-        await foreach (var r in vector.QueryRecipeAsync(req, ct))
-        {
-            yield return r;
-        }
+        //await foreach (var r in vector.QueryRecipeAsync(req, ct))
+        //{
+        //    yield return r;
+        //}
+
+        return await vector.QueryRecipeAsync(req, ct);
     }
     #endregion
 
