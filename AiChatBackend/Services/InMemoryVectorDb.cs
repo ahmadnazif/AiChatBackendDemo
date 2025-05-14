@@ -43,65 +43,18 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
         }
     }
 
+    public async IAsyncEnumerable<TextSimilarityResult> QueryTextSimilarityAsync(string text, CancellationToken ct)
+    {
+        var coll = store.GetCollection<Guid, TextVectorBase>(COLL_TEXT);
+        await coll.CreateCollectionIfNotExistsAsync(ct);
 
-    //public async Task<ResponseBase> UpsertFoodsAsync(List<FoodVectorModelBase> foods, CancellationToken ct)
-    //{
-    //    try
-    //    {
-    //        var coll = store.GetCollection<ulong, FoodVectorModel>(COLL_FOOD);
-    //        await coll.CreateCollectionIfNotExistsAsync(ct);
+        var vector = await gen.GenerateVectorAsync(text, cancellationToken: ct);
 
-    //        List<ulong> ids = [];
+        var result = coll.SearchEmbeddingAsync(vector, 5, cancellationToken: ct);
 
-    //        foreach (var food in foods)
-    //        {
-    //            var id = await coll.UpsertAsync(new FoodVectorModel
-    //            {
-    //                Id = 1, //Guid.NewGuid(),
-    //                FoodName = food.FoodName,
-    //                Remarks = food.Remarks,
-    //                Vector = await gen.GenerateVectorAsync(food.Remarks)
-    //            }, ct);
-
-    //            ids.Add(id);
-    //        }
-
-    //        return new()
-    //        {
-    //            IsSuccess = true,
-    //            Message = JsonSerializer.Serialize(ids)
-    //        };
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return new()
-    //        {
-    //            IsSuccess = false,
-    //            Message = ex.Message
-    //        };
-    //    }
-    //}
-
-    //public async Task QueryAsync(string prompt, CancellationToken ct)
-    //{
-    //    try
-    //    {
-    //        var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
-    //        await coll.CreateCollectionIfNotExistsAsync(ct);
-
-    //        var vector = await gen.GenerateVectorAsync(prompt, cancellationToken: ct);
-
-    //        var result = coll.SearchEmbeddingAsync(vector, 1, cancellationToken: ct);
-
-    //        await foreach(var r in result)
-    //        {
-    //            logger.LogInformation($"{r.Record.FoodName} [{r.Score}]");
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        logger.LogError(ex.Message);
-    //    }
-    //}
-
+        await foreach(var r in result)
+        {
+            r.
+        }
+    }
 }
