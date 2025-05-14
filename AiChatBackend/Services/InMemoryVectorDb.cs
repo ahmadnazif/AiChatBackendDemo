@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.VectorData;
 using Microsoft.SemanticKernel.Connectors.InMemory;
+using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
@@ -12,18 +13,18 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
     private readonly InMemoryVectorStore store = store;
     private const string COLL_TEXT = "text";
 
-    public async Task<ResponseBase> UpsertTextAsync(TextVectorBase data, CancellationToken ct)
+    public async Task<ResponseBase> UpsertTextAsync(string text, CancellationToken ct)
     {
         try
         {
-            var coll = store.GetCollection<Guid, TextVectorBase>(COLL_TEXT);
+            var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
             await coll.CreateCollectionIfNotExistsAsync(ct);
 
             var id = await coll.UpsertAsync(new TextVector
             {
                 Id = Guid.NewGuid(),
-                Text = data.Text,
-                Vector = await gen.GenerateVectorAsync(data.Text)
+                Text = text,
+                Vector = await gen.GenerateVectorAsync(text, cancellationToken: ct)
             }, ct);
 
             return new()
@@ -43,18 +44,23 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
         }
     }
 
-    public async IAsyncEnumerable<TextSimilarityResult> QueryTextSimilarityAsync(string text, CancellationToken ct)
+    public async IAsyncEnumerable<TextSimilarityResult> QueryTextSimilarityAsync(string text, [EnumeratorCancellation] CancellationToken ct)
     {
-        var coll = store.GetCollection<Guid, TextVectorBase>(COLL_TEXT);
+        var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
         await coll.CreateCollectionIfNotExistsAsync(ct);
 
         var vector = await gen.GenerateVectorAsync(text, cancellationToken: ct);
 
         var result = coll.SearchEmbeddingAsync(vector, 5, cancellationToken: ct);
 
-        await foreach(var r in result)
+        await foreach (var r in result)
         {
-            r.
+            yield return new()
+            {
+                Guid = r.Record.Id.ToString(),
+                Text = r.Record.Text,
+                Score = r.Score.Value
+            };
         }
     }
 }

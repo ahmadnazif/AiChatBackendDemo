@@ -8,10 +8,11 @@ namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/embedding")]
 [ApiController]
-public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorStorage vector, ApiClient api, LlmService llm) : ControllerBase
+public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorStorage vector, InMemoryVectorDb imvDb, ApiClient api, LlmService llm) : ControllerBase
 {
     private readonly ILogger<EmbeddingController> logger = logger;
     private readonly IVectorStorage vector = vector;
+    private readonly InMemoryVectorDb imvDb = imvDb;
     private readonly ApiClient api = api;
     private readonly LlmService llm = llm;
 
@@ -32,6 +33,20 @@ public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorSto
     //        Vector = result.Vector.ToArray()
     //    });
     //}
+
+    #region Text
+    [HttpPost("text/feed")]
+    public async Task<ActionResult<ResponseBase>> TextFeed([FromBody] string text, CancellationToken ct)
+    {
+        return await imvDb.UpsertTextAsync(text, ct);
+    }
+
+    [HttpPost("text/query")]
+    public IAsyncEnumerable<TextSimilarityResult> TextQuery([FromBody] string text, CancellationToken ct)
+    {
+        return imvDb.QueryTextSimilarityAsync(text, ct);
+    }
+    #endregion
 
     #region Recipe
     [HttpGet("recipe/list-all-from-external-api")]
@@ -86,12 +101,12 @@ public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorSto
     }
     #endregion
 
-    [HttpGet("list-collection-names")]
-    public async IAsyncEnumerable<string> ListCollectionNames([EnumeratorCancellation] CancellationToken ct)
-    {
-        await foreach (var cn in vector.ListCollectionNamesAsync(ct))
-        {
-            yield return cn;
-        }
-    }
+    //[HttpGet("list-collection-names")]
+    //public async IAsyncEnumerable<string> ListCollectionNames([EnumeratorCancellation] CancellationToken ct)
+    //{
+    //    await foreach (var cn in vector.ListCollectionNamesAsync(ct))
+    //    {
+    //        yield return cn;
+    //    }
+    //}
 }
