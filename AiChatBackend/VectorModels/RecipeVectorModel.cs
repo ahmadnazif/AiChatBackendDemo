@@ -9,15 +9,17 @@ public class RecipeVectorModel : RecipeVectorModelBase
 
 public class RecipeVectorModelBase
 {
-    [VectorStoreRecordKey] public uint Id { get; set; }
+    [VectorStoreRecordKey] public ulong Id { get; set; }
     [VectorStoreRecordData] public string Name { get; set; }
     [VectorStoreRecordData] public List<string> Ingredients { get; set; }
     [VectorStoreRecordData] public List<string> Instructions { get; set; }
     [VectorStoreRecordData] public int PrepTimeMinutes { get; set; }
     [VectorStoreRecordData] public int CookTimeMinutes { get; set; }
     [VectorStoreRecordData] public string Difficulty { get; set; }
-    [VectorStoreRecordData] public string Cousine { get; set; }
+    [VectorStoreRecordData] public string Cuisine { get; set; }
+    [VectorStoreRecordData] public int CaloriesPerServing { get; set; }
     [VectorStoreRecordData] public List<string> Tags { get; set; }
     [VectorStoreRecordData] public string Image { get; set; }
     [VectorStoreRecordData] public float Rating { get; set; }
+    [VectorStoreRecordData] public List<string> MealType { get; set; }
 }

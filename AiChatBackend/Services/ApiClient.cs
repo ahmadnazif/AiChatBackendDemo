@@ -61,7 +61,7 @@ public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpCl
         }
     }
 
-    public async Task<List<RecipeVectorModel>> ListRecipesAsync(int limit, CancellationToken ct = default)
+    public async Task<List<RecipeVectorModelBase>> ListRecipesAsync(int limit, CancellationToken ct = default)
     {
         try
         {

@@ -1,13 +1,16 @@
 ﻿using AiChatBackend.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/embedding")]
 [ApiController]
-public class EmbeddingController(IVectorStorage vector, ApiClient api) : ControllerBase
+public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorStorage vector, ApiClient api) : ControllerBase
 {
+    private readonly ILogger<EmbeddingController> logger = logger;
     private readonly IVectorStorage vector = vector;
     private readonly ApiClient api = api;
 
@@ -48,10 +51,41 @@ public class EmbeddingController(IVectorStorage vector, ApiClient api) : Control
     }
 
     #region Recipe
-    [HttpGet("recipe/list-all")]
-    public async Task<ActionResult<List<RecipeVectorModel>>> RecipeListAllFromExternalApi([FromQuery] int limit, CancellationToken ct)
+    [HttpGet("recipe/list-all-from-external-api")]
+    public async Task<ActionResult<List<RecipeVectorModelBase>>> RecipeListAllFromExternalApi([FromQuery] int limit, CancellationToken ct)
     {
         return await api.ListRecipesAsync(limit, ct);
+    }
+
+    [HttpPost("recipe/feed-all-from-external-api")]
+    public async Task<ActionResult<ResponseBase>> RecipeFeedAll(CancellationToken ct)
+    {
+        Stopwatch sw0 = Stopwatch.StartNew();
+        logger.LogInformation("[1] Obtaining recipes..");
+        var data = await api.ListRecipesAsync(50, ct);
+        sw0.Stop();
+        logger.LogInformation($"[1] {data.Count} data obtained ({sw0.Elapsed} elapsed)");
+
+        Stopwatch sw1 = Stopwatch.StartNew();
+        logger.LogInformation($"[2] Upserting {data.Count}..");
+        var resp = await vector.UpsertRecipesAsync(data, ct);
+        sw1.Stop();
+        logger.LogInformation($"[2] Upsert finished ({sw1.Elapsed} elapsed)..");
+        logger.LogInformation($"[2] Resp = {JsonSerializer.Serialize(resp)}");
+
+        return resp;
+    }
+
+    [HttpPost("recipe/query")]
+    public async IAsyncEnumerable<string> RecipeQuery([FromBody] EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
+    {
+        if (req.Top < 1)
+            req.Top = 1;
+
+        await foreach (var r in vector.QueryRecipeAsync(req, ct))
+        {
+            yield return r;
+        }
     }
     #endregion
 

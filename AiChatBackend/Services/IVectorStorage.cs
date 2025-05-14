@@ -10,4 +10,9 @@ public interface IVectorStorage
     //Task<ResponseBase> UpsertFoodsAsync(List<FoodVectorModelBase> foods, CancellationToken ct = default);
     IAsyncEnumerable<string> QueryFoodAsync(EmbeddingQueryRequest req, CancellationToken ct = default);
     IAsyncEnumerable<string> ListCollectionNamesAsync(CancellationToken ct = default);
+
+    #region Recipe
+    Task<ResponseBase> UpsertRecipesAsync(List<RecipeVectorModelBase> data, CancellationToken ct = default);
+    IAsyncEnumerable<string> QueryRecipeAsync(EmbeddingQueryRequest req, CancellationToken ct = default);
+    #endregion
 }
