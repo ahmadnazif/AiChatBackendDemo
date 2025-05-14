@@ -88,7 +88,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
 
     public async IAsyncEnumerable<string> QueryFoodAsync(EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
-        var coll = store.GetCollection<Guid, FoodVectorModel>(req.CollectionName);
+        var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
         await coll.CreateCollectionIfNotExistsAsync(ct);
 
         var vector = await gen.GenerateVectorAsync(req.Prompt, cancellationToken: ct);

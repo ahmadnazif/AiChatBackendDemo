@@ -38,6 +38,9 @@ public class EmbeddingController(IVectorStorage vector) : ControllerBase
     [HttpPost("food/query")]
     public async IAsyncEnumerable<string> FoodQuery([FromBody] EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
+        if (req.Top < 1)
+            req.Top = 1;
+
         await foreach(var r in vector.QueryFoodAsync(req, ct))
         {
             yield return r;
