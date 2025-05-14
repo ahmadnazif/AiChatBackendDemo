@@ -8,11 +8,12 @@ namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/embedding")]
 [ApiController]
-public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorStorage vector, ApiClient api) : ControllerBase
+public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorStorage vector, ApiClient api, LlmService llm) : ControllerBase
 {
     private readonly ILogger<EmbeddingController> logger = logger;
     private readonly IVectorStorage vector = vector;
     private readonly ApiClient api = api;
+    private readonly LlmService llm = llm;
 
     //[HttpPost("generate-embedding")]
     //public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
@@ -88,6 +89,18 @@ public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorSto
         //}
 
         return await vector.QueryRecipeAsync(req, ct);
+    }
+
+    [HttpPost("recipe/query-v2")]
+    public async Task<ActionResult<string>> RecipeQueryV2([FromBody] string userPrompt, CancellationToken ct)
+    {
+        return await vector.QueryRecipeV2Async(userPrompt, ct);
+    }
+
+    [HttpPost("recipe/test")]
+    public async Task<ActionResult<string>> Test([FromBody] string raw, CancellationToken ct)
+    {
+        return await llm.GeneralizeUserPromptAsJsonAsync(raw);
     }
     #endregion
 

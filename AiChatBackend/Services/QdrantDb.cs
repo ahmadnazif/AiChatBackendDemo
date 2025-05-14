@@ -12,12 +12,12 @@ using System.Text;
 
 namespace AiChatBackend.Services;
 
-public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen, LlmService chat) : IVectorStorage
+public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen, LlmService llm) : IVectorStorage
 {
     private readonly ILogger<QdrantDb> logger = logger;
     private readonly IVectorStore store = store;
     private readonly OllamaEmbeddingGenerator gen = gen;
-    private readonly LlmService chat = chat;
+    private readonly LlmService llm = llm;
 
     private const string COLL_FOOD = "food";
     private const string COLL_RECIPE = "recipe";
@@ -224,7 +224,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
             """;
 
         logger.LogInformation("Sending to LLM for processing..");
-        var resp = await chat.SendAsync(ChatRole.User, prompt);
+        var resp = await llm.GetResponseAsync(prompt);
         logger.LogInformation($"Response generated");
 
         return resp;
@@ -237,6 +237,55 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
         //}
     }
 
+    public async Task<string> QueryRecipeV2Async(string userPrompt, CancellationToken ct)
+    {
+        var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
+        await coll.CreateCollectionIfNotExistsAsync(ct);
+
+        // 1: Generalize prompt as JSON
+        // -----------------------------
+        logger.LogInformation("Generalize prompt as JSON via LLM..");
+        var json = await llm.GeneralizeUserPromptAsJsonAsync(userPrompt);
+        logger.LogInformation($"OUT = {json}");
+
+        logger.LogInformation("Generating prompt as vector..");
+        var vector = await gen.GenerateVectorAsync(json, cancellationToken: ct);
+
+        logger.LogInformation("Search in DB..");
+        var result = coll.SearchEmbeddingAsync(vector, 5, cancellationToken: ct);
+
+        // 1: Build context
+        // -----------------
+        logger.LogInformation("Building context from result..");
+        StringBuilder sb = new();
+        await foreach (var r in result)
+        {
+            logger.LogInformation($"IN-DB: {r.Record.Name} (Cuisine: {r.Record.Cuisine}, Cal: {r.Record.CaloriesPerServing})");
+            sb.AppendLine(GenerateEmbeddingInputString(r.Record));
+            sb.AppendLine();
+        }
+
+        // 2: Compose prompt to LLM
+        // -------------------------
+
+        var prompt = $"""
+            You are a helpful cooking assistant.
+
+            A user asked: "{userPrompt}"
+
+            Based on the internal search, here are some relevant recipes:
+            {sb}
+
+            Using the above information, answer the user's question as helpfully as possible.
+            If none of the recipes fit, say so.
+            """;
+
+        logger.LogInformation("Sending to LLM for processing..");
+        var resp = await llm.GetResponseAsync(prompt);
+        logger.LogInformation($"Response generated");
+
+        return resp;
+    }
 
     #endregion
 }
