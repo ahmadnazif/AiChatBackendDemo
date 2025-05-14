@@ -10,7 +10,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
     private readonly ILogger<InMemoryVectorDb> logger = logger;
     private readonly OllamaEmbeddingGenerator gen = gen;
     private readonly InMemoryVectorStore store = store;
-    private const string COLL_FOOD = "food";
+    private const string COLL_TEXT = "text";
 
     //public async Task<ResponseBase> UpsertFoodAsync(FoodVectorModelBase food, CancellationToken ct)
     //{

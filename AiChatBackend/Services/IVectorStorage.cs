@@ -6,7 +6,7 @@ namespace AiChatBackend.Services;
 public interface IVectorStorage
 {
     //Task<Embedding<float>> GenerateEmbeddingAsync(string text, CancellationToken ct = default);
-    IAsyncEnumerable<string> ListCollectionNamesAsync(CancellationToken ct = default);
+    //IAsyncEnumerable<string> ListCollectionNamesAsync(CancellationToken ct = default);
 
     #region Recipe
     Task<ResponseBase> UpsertRecipesAsync(List<RecipeVectorModelBase> data, CancellationToken ct = default);

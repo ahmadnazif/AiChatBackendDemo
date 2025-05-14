@@ -23,7 +23,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
 
     #region Recipe
 
-    private string GenerateEmbeddingInputString(RecipeVectorModelBase model)
+    private static string GenerateEmbeddingInputString(RecipeVectorModelBase model)
     {
         return $"""
                         Name: {model.Name}

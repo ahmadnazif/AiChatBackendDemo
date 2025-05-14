@@ -25,15 +25,15 @@ builder.Services.AddChatClient(x =>
     return new OllamaChatClient(endpoint, textModel);
 });
 
-// DB: Qdrant
+// Vector DB: Qdrant
 builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
 //builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"])));
 //builder.Services.AddQdrantVectorStore();
 builder.Services.AddScoped<IVectorStorage, QdrantDb>();
 
-// DB: InMemory
-//builder.Services.AddInMemoryVectorStore();
-//builder.Services.AddScoped<IVectorStorage, InMemoryVectorDb>();
+// Vector DB: InMemory
+builder.Services.AddInMemoryVectorStore();
+builder.Services.AddScoped<InMemoryVectorDb>();
 
 //#pragma warning disable SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 //builder.Services.AddOllamaTextEmbeddingGeneration(config["Ollama:EmbeddingModel"], new Uri(config[$"Ollama:Endpoint"]));
