@@ -85,7 +85,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
     //    }
     //}
 
-    public async Task QueryFoodsAsync(string prompt, CancellationToken ct)
+    public async Task QueryAsync(string prompt, CancellationToken ct)
     {
         try
         {

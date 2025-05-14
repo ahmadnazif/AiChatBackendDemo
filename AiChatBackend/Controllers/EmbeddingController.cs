@@ -37,7 +37,7 @@ public class EmbeddingController(IVectorStorage vector) : ControllerBase
     [HttpPost("query")]
     public async Task<ActionResult> Query([FromBody] string prompt, CancellationToken ct)
     {
-        await vector.QueryFoodsAsync(prompt, ct);
+        await vector.QueryAsync(prompt, ct);
         return Ok();
     }
 }
