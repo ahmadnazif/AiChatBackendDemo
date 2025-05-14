@@ -19,105 +19,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
     private readonly OllamaEmbeddingGenerator gen = gen;
     private readonly LlmService llm = llm;
 
-    private const string COLL_FOOD = "food";
     private const string COLL_RECIPE = "recipe";
-
-    #region Food
-    public async Task<ResponseBase> UpsertFoodAsync(FoodVectorModelBase food, CancellationToken ct)
-    {
-        try
-        {
-            var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
-            await coll.CreateCollectionIfNotExistsAsync(ct);
-
-            var id = await coll.UpsertAsync(new FoodVectorModel
-            {
-                Id = Guid.NewGuid(),
-                FoodName = food.FoodName,
-                Remarks = food.Remarks,
-                Vector = await gen.GenerateVectorAsync(food.Remarks, cancellationToken: ct)
-            }, ct);
-
-            return new()
-            {
-                IsSuccess = true,
-                Message = id.ToString()
-            };
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.Message);
-            return new()
-            {
-                IsSuccess = false,
-                Message = ex.Message
-            };
-        }
-    }
-
-    //public async Task<ResponseBase> UpsertFoodsAsync(List<FoodVectorModelBase> foods, CancellationToken ct)
-    //{
-    //    try
-    //    {
-    //        var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
-    //        await coll.CreateCollectionIfNotExistsAsync(ct);
-
-    //        List<Guid> ids = [];
-
-    //        foreach (var food in foods)
-    //        {
-    //            var id = await coll.UpsertAsync(new FoodVectorModel
-    //            {
-    //                Id = Guid.NewGuid(),
-    //                FoodName = food.FoodName,
-    //                Remarks = food.Remarks,
-    //                Vector = await gen.GenerateVectorAsync(food.Remarks)
-    //            }, ct);
-
-    //            ids.Add(id);
-    //        }
-
-    //        return new()
-    //        {
-    //            IsSuccess = true,
-    //            Message = JsonSerializer.Serialize(ids)
-    //        };
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return new()
-    //        {
-    //            IsSuccess = false,
-    //            Message = ex.Message
-    //        };
-    //    }
-    //}
-
-    public async IAsyncEnumerable<string> QueryFoodAsync(EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
-    {
-        var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
-        await coll.CreateCollectionIfNotExistsAsync(ct);
-
-        var vector = await gen.GenerateVectorAsync(req.Prompt, cancellationToken: ct);
-
-        var result = coll.SearchEmbeddingAsync(vector, req.Top, cancellationToken: ct);
-
-        await foreach (var r in result)
-        {
-            var val = $"{r.Record.FoodName} [{r.Score}]";
-            yield return val;
-        }
-    }
-
-    public async IAsyncEnumerable<string> ListCollectionNamesAsync([EnumeratorCancellation] CancellationToken ct)
-    {
-        await foreach (var name in store.ListCollectionNamesAsync(ct))
-        {
-            logger.LogInformation($"{name}");
-            yield return name;
-        }
-    }
-    #endregion
 
     #region Recipe
 
@@ -191,7 +93,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
         }
     }
 
-    public async Task<string> QueryRecipeAsync(EmbeddingQueryRequest req, CancellationToken ct)
+    public async Task<string> QueryRecipeV1Async(EmbeddingQueryRequest req, CancellationToken ct)
     {
         var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
         await coll.CreateCollectionIfNotExistsAsync(ct);

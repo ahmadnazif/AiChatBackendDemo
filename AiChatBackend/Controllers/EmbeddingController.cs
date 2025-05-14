@@ -33,24 +33,6 @@ public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorSto
     //    });
     //}
 
-    [HttpPost("food/feed-data")]
-    public async Task<ActionResult<ResponseBase>> FoodFeed([FromBody] FoodVectorModelBase food, CancellationToken ct)
-    {
-        return await vector.UpsertFoodAsync(food, ct);
-    }
-
-    [HttpPost("food/query")]
-    public async IAsyncEnumerable<string> FoodQuery([FromBody] EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
-    {
-        if (req.Top < 1)
-            req.Top = 1;
-
-        await foreach(var r in vector.QueryFoodAsync(req, ct))
-        {
-            yield return r;
-        }
-    }
-
     #region Recipe
     [HttpGet("recipe/list-all-from-external-api")]
     public async Task<ActionResult<List<RecipeVectorModelBase>>> RecipeListAllFromExternalApi([FromQuery] int limit, CancellationToken ct)
@@ -88,7 +70,7 @@ public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorSto
         //    yield return r;
         //}
 
-        return await vector.QueryRecipeAsync(req, ct);
+        return await vector.QueryRecipeV1Async(req, ct);
     }
 
     [HttpPost("recipe/query-v2")]
