@@ -95,5 +95,4 @@ public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpCl
             return [];
         }
     }
-
 }

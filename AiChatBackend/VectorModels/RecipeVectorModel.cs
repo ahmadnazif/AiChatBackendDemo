@@ -2,10 +2,14 @@
 
 namespace AiChatBackend.VectorModels;
 
-public class RecipeVectorModel
+public class RecipeVectorModel : RecipeVectorModelBase
+{
+    [VectorStoreRecordVector(768, DistanceFunction = DistanceFunction.CosineSimilarity, IndexKind = IndexKind.Hnsw)] public ReadOnlyMemory<float> Vector { get; set; }
+}
+
+public class RecipeVectorModelBase
 {
     [VectorStoreRecordKey] public uint Id { get; set; }
-    [VectorStoreRecordVector(768, DistanceFunction = DistanceFunction.CosineSimilarity, IndexKind = IndexKind.Hnsw)] public ReadOnlyMemory<float> Vector { get; set; }
     [VectorStoreRecordData] public string Name { get; set; }
     [VectorStoreRecordData] public List<string> Ingredients { get; set; }
     [VectorStoreRecordData] public List<string> Instructions { get; set; }
