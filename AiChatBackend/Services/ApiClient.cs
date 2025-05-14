@@ -60,7 +60,7 @@ public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpCl
         }
     }
 
-    public async Task<List<RecipeVectorModel>> ListRecipesAsync()
+    public async Task<DummyjsonRecipeResponse> ListRecipesAsync(CancellationToken ct = default)
     {
         try
         {
@@ -69,21 +69,27 @@ public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpCl
             var httpClient = fac.CreateClient();
             httpClient.BaseAddress = new(baseUrl);
             httpClient.Timeout = httpClientTimeout;
-            var resp = await httpClient.GetAsync("recipes");
+            var resp = await httpClient.GetAsync("recipes", ct);
 
             if (resp.IsSuccessStatusCode)
-                return await resp.Content.ReadFromJsonAsync<List<VectorModels.RecipeVectorModel>>();
+                return await resp.Content.ReadFromJsonAsync<DummyjsonRecipeResponse>(cancellationToken: ct);
 
             else
             {
                 logger.LogError(resp.StatusCode.ToString());
-                return [];
+                return new()
+                {
+                    Recipes = []
+                };
             }
         }
         catch (Exception ex)
         {
             logger.LogError(ex.Message);
-            return [];
+            return new()
+            {
+                Recipes = []
+            };
         }
     }
 
