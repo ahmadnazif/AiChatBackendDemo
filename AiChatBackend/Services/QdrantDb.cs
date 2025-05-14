@@ -86,25 +86,19 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
     //    }
     //}
 
-    public async Task QueryAsync(EmbeddingQueryRequest req, CancellationToken ct)
+    public async IAsyncEnumerable<string> QueryFoodAsync(EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
-        try
+        var coll = store.GetCollection<Guid, FoodVectorModel>(req.CollectionName);
+        await coll.CreateCollectionIfNotExistsAsync(ct);
+
+        var vector = await gen.GenerateVectorAsync(req.Prompt, cancellationToken: ct);
+
+        var result = coll.SearchEmbeddingAsync(vector, req.Top, cancellationToken: ct);
+
+        await foreach (var r in result)
         {
-            var coll = store.GetCollection<Guid, FoodVectorModel>(req.CollectionName);
-            await coll.CreateCollectionIfNotExistsAsync(ct);
-
-            var vector = await gen.GenerateVectorAsync(req.Prompt, cancellationToken: ct);
-
-            var result = coll.SearchEmbeddingAsync(vector, req.Top, cancellationToken: ct);
-
-            await foreach (var r in result)
-            {
-                logger.LogInformation($"{r.Record.FoodName} [{r.Score}]");
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.Message);
+            var val = $"{r.Record.FoodName} [{r.Score}]";
+            yield return val;
         }
     }
 

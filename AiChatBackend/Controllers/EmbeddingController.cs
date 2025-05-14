@@ -29,17 +29,19 @@ public class EmbeddingController(IVectorStorage vector) : ControllerBase
     //    });
     //}
 
-    [HttpPost("feed-data")]
-    public async Task<ActionResult<ResponseBase>> Feed([FromBody] FoodVectorModelBase food, CancellationToken ct)
+    [HttpPost("food/feed-data")]
+    public async Task<ActionResult<ResponseBase>> FoodFeed([FromBody] FoodVectorModelBase food, CancellationToken ct)
     {
         return await vector.UpsertFoodAsync(food, ct);
     }
 
-    [HttpPost("query")]
-    public async Task<ActionResult> Query([FromBody] EmbeddingQueryRequest req, CancellationToken ct)
+    [HttpPost("food/query")]
+    public async IAsyncEnumerable<string> FoodQuery([FromBody] EmbeddingQueryRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
-        await vector.QueryAsync(req, ct);
-        return Ok();
+        await foreach(var r in vector.QueryFoodAsync(req, ct))
+        {
+            yield return r;
+        }
     }
 
     [HttpGet("list-collection-names")]
