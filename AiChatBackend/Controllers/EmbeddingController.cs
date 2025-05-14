@@ -49,9 +49,9 @@ public class EmbeddingController(IVectorStorage vector, ApiClient api) : Control
 
     #region Recipe
     [HttpGet("recipe/list-all")]
-    public async Task<ActionResult<DummyjsonRecipeResponse>> RecipeListAllFromExternalApi(CancellationToken ct)
+    public async Task<ActionResult<List<RecipeVectorModel>>> RecipeListAllFromExternalApi([FromQuery] int limit, CancellationToken ct)
     {
-        return await api.ListRecipesAsync(ct);
+        return await api.ListRecipesAsync(limit, ct);
     }
     #endregion
 

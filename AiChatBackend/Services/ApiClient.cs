@@ -1,4 +1,5 @@
-﻿using static System.Net.WebRequestMethods;
+﻿using MessagePack.Formatters;
+using static System.Net.WebRequestMethods;
 
 namespace AiChatBackend.Services;
 
@@ -60,7 +61,7 @@ public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpCl
         }
     }
 
-    public async Task<DummyjsonRecipeResponse> ListRecipesAsync(CancellationToken ct = default)
+    public async Task<List<RecipeVectorModel>> ListRecipesAsync(int limit, CancellationToken ct = default)
     {
         try
         {
@@ -69,27 +70,29 @@ public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpCl
             var httpClient = fac.CreateClient();
             httpClient.BaseAddress = new(baseUrl);
             httpClient.Timeout = httpClientTimeout;
-            var resp = await httpClient.GetAsync("recipes", ct);
+            var resp = await httpClient.GetAsync($"recipes?limit={limit}", ct);
 
             if (resp.IsSuccessStatusCode)
-                return await resp.Content.ReadFromJsonAsync<DummyjsonRecipeResponse>(cancellationToken: ct);
+            {
+                var result = await resp.Content.ReadFromJsonAsync<DummyjsonRecipeResponse>(cancellationToken: ct);
+                if (result == null)
+                {
+                    logger.LogError($"Response is NULL. Please check");
+                    return [];
+                }
 
+                return result.Recipes;
+            }
             else
             {
                 logger.LogError(resp.StatusCode.ToString());
-                return new()
-                {
-                    Recipes = []
-                };
+                return [];
             }
         }
         catch (Exception ex)
         {
             logger.LogError(ex.Message);
-            return new()
-            {
-                Recipes = []
-            };
+            return [];
         }
     }
 
