@@ -86,16 +86,16 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
     //    }
     //}
 
-    public async Task QueryAsync(string prompt, CancellationToken ct)
+    public async Task QueryAsync(EmbeddingQueryRequest req, CancellationToken ct)
     {
         try
         {
-            var coll = store.GetCollection<Guid, FoodVectorModel>(COLL_FOOD);
+            var coll = store.GetCollection<Guid, FoodVectorModel>(req.CollectionName);
             await coll.CreateCollectionIfNotExistsAsync(ct);
 
-            var vector = await gen.GenerateVectorAsync(prompt, cancellationToken: ct);
+            var vector = await gen.GenerateVectorAsync(req.Prompt, cancellationToken: ct);
 
-            var result = coll.SearchEmbeddingAsync(vector, 1, cancellationToken: ct);
+            var result = coll.SearchEmbeddingAsync(vector, req.Top, cancellationToken: ct);
 
             await foreach (var r in result)
             {
