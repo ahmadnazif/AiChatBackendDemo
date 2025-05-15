@@ -38,6 +38,38 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
         return r.Text;
     }
 
+    public async Task<IEnumerable<string>> GenerateRandomStatementAsync(int number, TextGenerationDifficultyLevel difficultyLevel)
+    {
+        List<ChatMessage> msg = [];
+
+        //var prompt = $"""
+        //    Generate a JSON array containing exactly {number} distinct simple text statements. 
+        //    Each statement should be a concise and interesting fact or opinion on a random topic. 
+        //    Ensure the JSON array is the top-level element and each statement is a string within the array.
+        //    """;
+
+        var prompt = $"""
+            Generate a raw JSON array containing exactly {number} distinct, concise, and interesting text statements on random topics. 
+            The output should ONLY be the JSON array with no additional surrounding text or explanations.
+            """;
+
+        msg.Add(new(ChatRole.User, prompt));
+
+        try
+        {
+            logger.LogInformation($"PROMPT = {prompt}");
+            var r = await client.GetResponseAsync(msg);
+            logger.LogInformation($"RESPONSE = {r.Text}");
+
+            return JsonSerializer.Deserialize<List<string>>(r.Text);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+            return [];
+        }
+    }
+
     public async IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(string prompt, [EnumeratorCancellation] CancellationToken ct = default)
     {
         List<ChatMessage> msg = [];

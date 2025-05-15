@@ -10,7 +10,7 @@ namespace AiChatBackend.Controllers;
 [Route($"{BASE_ROUTE}/embedding")]
 [ApiController]
 public class EmbeddingController(
-    ILogger<EmbeddingController> logger, IConfiguration config, IVectorStorage vector, 
+    ILogger<EmbeddingController> logger, IConfiguration config, IVectorStorage vector,
     InMemoryVectorDb imvDb, ApiClient api, LlmService llm, TextSimilarityCache tsCache) : ControllerBase
 {
     private readonly ILogger<EmbeddingController> logger = logger;
@@ -40,9 +40,16 @@ public class EmbeddingController(
     //}
 
     [HttpGet("get-model-name")]
-    public ActionResult<string> GetModelName(CancellationToken ct)
+    public ActionResult<string> GetModelName([FromQuery] LlmModelType type)
     {
-        return config["Ollama:EmbeddingModel"];
+        var ollama = "Ollama";
+        return type switch
+        {
+            LlmModelType.Embedding => config[$"{ollama}:EmbeddingModel"],
+            LlmModelType.Text => config[$"{ollama}:TextModel"],
+            LlmModelType.Vision => config[$"{ollama}:Vision"],
+            _ => "Unknown",
+        };
     }
 
     #region Text
@@ -66,6 +73,30 @@ public class EmbeddingController(
     public async Task<ActionResult<ResponseBase>> TextFeed([FromBody] string text, CancellationToken ct)
     {
         return await imvDb.UpsertTextAsync(text, ct);
+    }
+
+    [HttpPost("text/auto-populate")]
+    public async Task<ActionResult<ResponseBase>> TextAutoPopulate([FromBody] AutoPopulateStatementRequest req, CancellationToken ct)
+    {
+        if (req.Number < 1)
+            req.Number = 5;
+
+        Stopwatch sw = Stopwatch.StartNew();
+        var statements = await llm.GenerateRandomStatementAsync(req.Number, req.Difficulty);
+
+        List<ResponseBase> resps = [];
+        foreach (var statement in statements)
+        {
+            var resp = await imvDb.UpsertTextAsync(statement, ct);
+            resps.Add(resp);
+        }
+        sw.Stop();
+
+        return new ResponseBase
+        {
+             IsSuccess = resps.Exists(x=>x.IsSuccess),
+             Message = $"{resps.Count(x=>x.IsSuccess)} statement populated ({sw.Elapsed} elapsed)"
+        };
     }
 
     [HttpDelete("text/delete")]
@@ -131,10 +162,11 @@ public class EmbeddingController(
         return await vector.QueryRecipeV2Async(userPrompt, ct);
     }
 
-    [HttpPost("recipe/test")]
-    public async Task<ActionResult<string>> Test([FromBody] string raw, CancellationToken ct)
+    [HttpPost("test")]
+    public async Task<ActionResult<List<string>>> Test([FromBody] int number, CancellationToken ct)
     {
-        return await llm.GeneralizeUserPromptAsJsonAsync(raw);
+        var result = await llm.GenerateRandomStatementAsync(number, TextGenerationDifficultyLevel.Simple);
+        return result.ToList();
     }
     #endregion
 
