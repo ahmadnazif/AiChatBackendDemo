@@ -1,4 +1,5 @@
 ﻿using AiChatBackend.Caches;
+using AiChatBackend.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
@@ -7,11 +8,12 @@ using System.Threading.Channels;
 
 namespace AiChatBackend.Hubs;
 
-public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache cache) : Hub
+public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache cache, LlmService llm) : Hub
 {
     private readonly ILogger<ChatHub> logger = logger;
     private readonly IChatClient client = client;
     private readonly IHubUserCache cache = cache;
+    private readonly LlmService llm = llm;
 
     public async Task ReceiveSingleAsync(SingleChatRequest req)
     {
