@@ -15,6 +15,8 @@ using Qdrant.Client;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
+builder.Services.AddSingleton<TextSimilarityCache>();
+
 builder.Services.AddChatClient(x =>
 {
     const string ollama = "Ollama";
