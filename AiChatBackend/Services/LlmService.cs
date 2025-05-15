@@ -38,7 +38,7 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
         return r.Text;
     }
 
-    public async Task<IEnumerable<string>> GenerateRandomStatementAsync(int number, TextGenerationDifficultyLevel difficultyLevel)
+    public async Task<List<string>> GenerateRandomStatementsAsync(int number, TextGenerationLength length)
     {
         List<ChatMessage> msg = [];
 
@@ -50,6 +50,7 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
 
         var prompt = $"""
             Generate a raw JSON array containing exactly {number} distinct, concise, and interesting text statements on random topics. 
+            The length of text should be {length.ToString().ToLower()}. 
             The output should ONLY be the JSON array with no additional surrounding text or explanations.
             """;
 

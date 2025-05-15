@@ -82,7 +82,7 @@ public class EmbeddingController(
             req.Number = 5;
 
         Stopwatch sw = Stopwatch.StartNew();
-        var statements = await llm.GenerateRandomStatementAsync(req.Number, req.Difficulty);
+        var statements = await llm.GenerateRandomStatementsAsync(req.Number, req.Length);
 
         List<ResponseBase> resps = [];
         foreach (var statement in statements)
@@ -94,8 +94,8 @@ public class EmbeddingController(
 
         return new ResponseBase
         {
-             IsSuccess = resps.Exists(x=>x.IsSuccess),
-             Message = $"{resps.Count(x=>x.IsSuccess)} statement populated ({sw.Elapsed} elapsed)"
+            IsSuccess = resps.Exists(x => x.IsSuccess),
+            Message = $"{resps.Count(x => x.IsSuccess)} statement populated ({sw.Elapsed} elapsed)"
         };
     }
 
@@ -163,10 +163,9 @@ public class EmbeddingController(
     }
 
     [HttpPost("test")]
-    public async Task<ActionResult<List<string>>> Test([FromBody] int number, CancellationToken ct)
+    public async Task<ActionResult<List<string>>> Test([FromBody] AutoPopulateStatementRequest req, CancellationToken ct)
     {
-        var result = await llm.GenerateRandomStatementAsync(number, TextGenerationDifficultyLevel.Simple);
-        return result.ToList();
+        return await llm.GenerateRandomStatementsAsync(req.Number, req.Length);
     }
     #endregion
 
