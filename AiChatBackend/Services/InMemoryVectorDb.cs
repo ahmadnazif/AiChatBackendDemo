@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.AI;
+﻿using AiChatBackend.Caches;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.VectorData;
 using Microsoft.SemanticKernel.Connectors.InMemory;
@@ -6,11 +7,12 @@ using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
-public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingGenerator gen, InMemoryVectorStore store)
+public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingGenerator gen, InMemoryVectorStore store, TextSimilarityCache cache)
 {
     private readonly ILogger<InMemoryVectorDb> logger = logger;
     private readonly OllamaEmbeddingGenerator gen = gen;
     private readonly InMemoryVectorStore store = store;
+    private readonly TextSimilarityCache cache = cache;
     private const string COLL_TEXT = "text";
 
     public async Task<ResponseBase> UpsertTextAsync(string text, CancellationToken ct)
@@ -20,17 +22,63 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
             var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
             await coll.CreateCollectionIfNotExistsAsync(ct);
 
-            var id = await coll.UpsertAsync(new TextVector
+            TextVector record = new()
             {
                 Id = Guid.NewGuid(),
                 Text = text,
                 Vector = await gen.GenerateVectorAsync(text, cancellationToken: ct)
-            }, ct);
+            };
+
+            var id = await coll.UpsertAsync(record, ct);
+            cache.Add(record);
 
             return new()
             {
                 IsSuccess = true,
                 Message = id.ToString()
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+            return new()
+            {
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    public async Task<TextVector> GetTextAsync(Guid key, CancellationToken ct)
+    {
+        try
+        {
+            var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
+            await coll.CreateCollectionIfNotExistsAsync(ct);
+
+            return await coll.GetAsync(key, cancellationToken: ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<ResponseBase> DeleteTextAsync(Guid key, CancellationToken ct)
+    {
+        try
+        {
+            var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
+            await coll.CreateCollectionIfNotExistsAsync(ct);
+
+            await coll.DeleteAsync(key, ct);
+            cache.Remove(key);
+
+            return new()
+            {
+                IsSuccess = true,
+                Message = key.ToString()
             };
         }
         catch (Exception ex)

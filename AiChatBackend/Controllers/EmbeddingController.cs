@@ -1,4 +1,5 @@
-﻿using AiChatBackend.Services;
+﻿using AiChatBackend.Caches;
+using AiChatBackend.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,13 +9,17 @@ namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/embedding")]
 [ApiController]
-public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorStorage vector, InMemoryVectorDb imvDb, ApiClient api, LlmService llm) : ControllerBase
+public class EmbeddingController(
+    ILogger<EmbeddingController> logger, IConfiguration config, IVectorStorage vector, 
+    InMemoryVectorDb imvDb, ApiClient api, LlmService llm, TextSimilarityCache tsCache) : ControllerBase
 {
     private readonly ILogger<EmbeddingController> logger = logger;
+    private readonly IConfiguration config = config;
     private readonly IVectorStorage vector = vector;
     private readonly InMemoryVectorDb imvDb = imvDb;
     private readonly ApiClient api = api;
     private readonly LlmService llm = llm;
+    private readonly TextSimilarityCache tsCache = tsCache;
 
     //[HttpPost("generate-embedding")]
     //public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
@@ -34,15 +39,47 @@ public class EmbeddingController(ILogger<EmbeddingController> logger, IVectorSto
     //    });
     //}
 
+    [HttpGet("get-model-name")]
+    public ActionResult<string> GetModelName(CancellationToken ct)
+    {
+        return config["Ollama:EmbeddingModel"];
+    }
+
     #region Text
+    [HttpGet("text/list-all-from-cache")]
+    public ActionResult<List<TextVector>> TextListAllFromCache(CancellationToken ct)
+    {
+        return tsCache.ListAll();
+    }
+
+    [HttpGet("text/get")]
+    public async Task<ActionResult<TextVector>> TextGet([FromBody] string key, CancellationToken ct)
+    {
+        var succ = Guid.TryParse(key, out var guid);
+        if (!succ)
+            return null;
+
+        return await imvDb.GetTextAsync(guid, ct);
+    }
+
     [HttpPost("text/feed")]
     public async Task<ActionResult<ResponseBase>> TextFeed([FromBody] string text, CancellationToken ct)
     {
         return await imvDb.UpsertTextAsync(text, ct);
     }
 
-    [HttpPost("text/query")]
-    public IAsyncEnumerable<TextSimilarityResult> TextQuery([FromBody] string text, CancellationToken ct)
+    [HttpDelete("text/delete")]
+    public async Task<ActionResult<ResponseBase>> TextDelete([FromQuery] string key, CancellationToken ct)
+    {
+        var succ = Guid.TryParse(key, out var guid);
+        if (!succ)
+            return new ResponseBase { IsSuccess = false, Message = "Unable to parse key as GUID" };
+
+        return await imvDb.DeleteTextAsync(guid, ct);
+    }
+
+    [HttpGet("text/query-similarity")]
+    public IAsyncEnumerable<TextSimilarityResult> TextQuery([FromQuery] string text, CancellationToken ct)
     {
         return imvDb.QueryTextSimilarityAsync(text, ct);
     }
