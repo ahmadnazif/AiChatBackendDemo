@@ -16,6 +16,13 @@ This is backend API powered by new `Microsoft.Extensions.AI`, with Ollama as gen
   -  Embedding model: nomic-embed-text `ollama pull nomic-embed-text`
 - Run the models by using `ollama run <model_name>` to test the model, or the model will automatically run when you use the `LlmService` service in this API.
 - Verify the running model with command `ollama ps` (in CMD, PS, terminal or Docker Containter "Exec" tab).
+#### Vector database
+Vector database is needed for RAG (Retrieval-Augmented Generation). We use In-Memory vector database & awesome [Qdrant](https://qdrant.tech/) database for this.
+- For RAG that experiments on text similarity analysis, in-memory database will be used via [Semantic Kernel In-Memory connector](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/inmemory-connector?pivots=programming-language-csharp). It automatically running when application starts.
+- For RAG that experiments on more advanced data (list of recipe), Qdrant database will be used via [Semantic Kernel Qdrant connector](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/qdrant-connector?pivots=programming-language-csharp). This library built on top of official [Qdrant .NET client](https://github.com/qdrant/qdrant-dotnet). This needs running Qdrant instance, and you can install it in your local machine using [Docker](https://qdrant.tech/documentation/quickstart/) -- The easiest way to running Qdrant locally.
+  - Qdrant typically run on:
+    - API: [http://localhost:6333](http://localhost:6333),
+    - Portal: [http://localhost:6333/dashboard](http://localhost:6333/dashboard)
 
 ## Running the app
 - .NET 8 SDK must be installed to debug the code.
