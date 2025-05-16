@@ -82,7 +82,7 @@ public class EmbeddingController(
             req.Number = 5;
 
         Stopwatch sw = Stopwatch.StartNew();
-        var statements = await llm.GenerateRandomStatementsAsync(req.Number, req.Length);
+        var statements = await llm.GenerateRandomSentencesAsync(req.Number, req.Length);
 
         List<ResponseBase> resps = [];
         foreach (var statement in statements)
@@ -165,7 +165,7 @@ public class EmbeddingController(
     [HttpPost("test1")]
     public async Task<ActionResult<List<string>>> Test([FromBody] AutoPopulateStatementRequest req, CancellationToken ct)
     {
-        return await llm.GenerateRandomStatementsAsync(req.Number, req.Length);
+        return await llm.GenerateRandomSentencesAsync(req.Number, req.Length);
     }
 
     [HttpPost("test2")]
