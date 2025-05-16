@@ -9,10 +9,10 @@ using System.Threading.Channels;
 
 namespace AiChatBackend.Hubs;
 
-public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache cache, LlmService llm) : Hub
+public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService llm) : Hub
 {
     private readonly ILogger<ChatHub> logger = logger;
-    private readonly IChatClient client = client;
+    //private readonly IChatClient client = client;
     private readonly IHubUserCache cache = cache;
     private readonly LlmService llm = llm;
 
@@ -91,36 +91,20 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
         if (req.PreviousMessages.Count == 0)
         {
-            //chatMessages.Add(new()
-            //{
-            //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-            //    Text = req.Prompt.Text
-            //});
             chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
         }
         else
         {
             foreach (var m in req.PreviousMessages)
             {
-                //chatMessages.Add(new()
-                //{
-                //    Role = ChatHelper.GetChatRole(m.Sender),
-                //    Text = m.Text,
-                //});
                 chatMessages.Add(new(ChatHelper.GetChatRole(m.Sender), m.Text));
             }
-
-            //chatMessages.Add(new()
-            //{
-            //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-            //    Text = req.Prompt.Text
-            //});
 
             chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
         }
 
         Stopwatch sw = Stopwatch.StartNew();
-        var resp = await client.GetResponseAsync(chatMessages);
+        var resp = await llm.GetResponseAsync(chatMessages);
         sw.Stop();
 
         var sender = ChatHelper.GetChatSender(resp.Messages[0].Role); // resp.Message.Role
@@ -174,53 +158,42 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             if (req.PreviousMessages.Count == 0)
             {
-                //chatMessages.Add(new()
-                //{
-                //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                //    Text = req.Prompt.Text
-                //});
                 chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
             else
             {
                 foreach (var m in req.PreviousMessages)
                 {
-                    //chatMessages.Add(new()
-                    //{
-                    //    Role = ChatHelper.GetChatRole(m.Sender),
-                    //    Text = m.Text,
-                    //});
                     chatMessages.Add(new(ChatHelper.GetChatRole(m.Sender), m.Text));
                 }
-
-                //chatMessages.Add(new()
-                //{
-                //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                //    Text = req.Prompt.Text
-                //});
                 chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
 
-            var id = Generator.NextStreamingId();
-            logger.LogInformation($"Streaming: {id}");
-
-            await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
             {
-                var hasFinished = resp.FinishReason.HasValue;
-                yield return new()
-                {
-                    StreamingId = id,
-                    HasFinished = hasFinished,
-                    Message = new(ChatSender.Assistant, resp.Text),
-                    ModelId = resp.ModelId,
-                    CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
-                };
-
-                if (hasFinished)
-                {
-                    logger.LogInformation($"Streaming {id} completed");
-                }
+                yield return resp;
             }
+
+            //var id = Generator.NextStreamingId();
+            //logger.LogInformation($"Streaming: {id}");
+
+            //await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            //{
+            //    var hasFinished = resp.FinishReason.HasValue;
+            //    yield return new()
+            //    {
+            //        StreamingId = id,
+            //        HasFinished = hasFinished,
+            //        Message = new(ChatSender.Assistant, resp.Text),
+            //        ModelId = resp.ModelId,
+            //        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+            //    };
+
+            //    if (hasFinished)
+            //    {
+            //        logger.LogInformation($"Streaming {id} completed");
+            //    }
+            //}
         }
         finally
         {
@@ -276,7 +249,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
 
-            await foreach(var resp in llm.StreamResponseAsync(chatMessages, ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
             {
                 yield return resp;
             }
@@ -348,54 +321,43 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
                 if (req.PreviousMessages.Count == 0)
                 {
-                    //chatMessages.Add(new()
-                    //{
-                    //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                    //    Text = req.Prompt.Text
-                    //});
                     chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
                 }
                 else
                 {
                     foreach (var m in req.PreviousMessages)
                     {
-                        //chatMessages.Add(new()
-                        //{
-                        //    Role = ChatHelper.GetChatRole(m.Sender),
-                        //    Text = m.Text,
-                        //});
                         chatMessages.Add(new(ChatHelper.GetChatRole(m.Sender), m.Text));
                     }
-
-                    //chatMessages.Add(new()
-                    //{
-                    //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-                    //    Text = req.Prompt.Text
-                    //});
                     chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
                 }
 
-                var id = Generator.NextStreamingId();
-                logger.LogInformation($"Streaming: {id}");
-
-                await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+                await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
                 {
-                    var hasFinished = resp.FinishReason.HasValue;
-                    await writer.WriteAsync(new()
-                    {
-                        StreamingId = id,
-                        HasFinished = hasFinished,
-                        Message = new(ChatSender.Assistant, resp.Text),
-                        ModelId = resp.ModelId,
-                        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
-                    }, ct);
+                    await writer.WriteAsync(resp, ct);
 
-                    if (hasFinished)
-                    {
-                        logger.LogInformation($"Streaming {id} completed");
+                    if (resp.HasFinished)
                         writer.Complete();
-                    }
                 }
+
+                //await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+                //{
+                //    var hasFinished = resp.FinishReason.HasValue;
+                //    await writer.WriteAsync(new()
+                //    {
+                //        StreamingId = id,
+                //        HasFinished = hasFinished,
+                //        Message = new(ChatSender.Assistant, resp.Text),
+                //        ModelId = resp.ModelId,
+                //        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+                //    }, ct);
+
+                //    if (hasFinished)
+                //    {
+                //        logger.LogInformation($"Streaming {id} completed");
+                //        writer.Complete();
+                //    }
+                //}
             }
             catch (Exception ex)
             {
@@ -456,7 +418,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
 
-            await foreach(var resp in llm.StreamResponseAsync(chatMessage, ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessage, ct))
             {
                 yield return resp;
             }
@@ -566,7 +528,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 chatMessages.Add(latestChatMessage);
             }
 
-            await foreach(var resp in llm.StreamResponseAsync(chatMessages, ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
             {
                 yield return resp;
             }
