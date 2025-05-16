@@ -10,19 +10,17 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
 
     public async Task<string> GeneralizeUserPromptAsJsonAsync(string userPrompt)
     {
-        var txt = $"""
+        List<ChatMessage> msg = [];
+
+        msg.Add(new(ChatRole.System, """
             You are a smart query interpreter. Analyze the user query and return:
             
             - The cleaned query text that captures what the user is looking for
             - Any filters or constraints that can be used for structured search
             - Keep your response strictly in JSON format
+            """));
 
-            User query: "{userPrompt}"            
-            """;
-
-        List<ChatMessage> msg = [];
-
-        msg.Add(new(ChatRole.User, txt));
+        msg.Add(new(ChatRole.User, userPrompt));
 
         var r = await client.GetResponseAsync(msg);
         return r.Text;
@@ -42,19 +40,23 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
     {
         List<ChatMessage> msg = [];
 
+        msg.Add(new(ChatRole.System, """
+            You are a smart JSON generator. Your response must be a valid raw JSON string only,
+            without any explanation, markdown, or extra text.
+            """));
+
+        msg.Add(new(ChatRole.User, $"""
+            Generate {number} distinct, concise, and interesting sentences on random topics. 
+            The length of text should be {length.ToString().ToLower()}. 
+            """));
+
         //var prompt = $"""
-        //    Generate a JSON array containing exactly {number} distinct simple text statements. 
-        //    Each statement should be a concise and interesting fact or opinion on a random topic. 
-        //    Ensure the JSON array is the top-level element and each statement is a string within the array.
+        //    Generate a raw JSON array containing exactly {number} distinct, concise, and interesting text statements on random topics. 
+        //    The length of text should be {length.ToString().ToLower()}. 
+        //    The output should ONLY be the JSON array with no additional surrounding text or explanations.
         //    """;
 
-        var prompt = $"""
-            Generate a raw JSON array containing exactly {number} distinct, concise, and interesting text statements on random topics. 
-            The length of text should be {length.ToString().ToLower()}. 
-            The output should ONLY be the JSON array with no additional surrounding text or explanations.
-            """;
-
-        msg.Add(new(ChatRole.User, prompt));
+        //msg.Add(new(ChatRole.User, prompt));
 
         try
         {
@@ -77,10 +79,36 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
 
         msg.Add(new(ChatRole.User, prompt));
 
+        return StreamResponseAsync(msg, ct);
+
+        //var id = Generator.NextStreamingId();
+        //logger.LogInformation($"Streaming {id} started");
+
+        //await foreach (var resp in client.GetStreamingResponseAsync(msg, cancellationToken: ct))
+        //{
+        //    var hasFinished = resp.FinishReason.HasValue;
+        //    yield return new()
+        //    {
+        //        StreamingId = id,
+        //        HasFinished = hasFinished,
+        //        Message = new(ChatSender.Assistant, resp.Text),
+        //        ModelId = resp.ModelId,
+        //        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+        //    };
+
+        //    if (hasFinished)
+        //    {
+        //        logger.LogInformation($"Streaming {id} completed");
+        //    }
+        //}
+    }
+
+    public async IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(List<ChatMessage> chatMessages, [EnumeratorCancellation] CancellationToken ct = default)
+    {
         var id = Generator.NextStreamingId();
         logger.LogInformation($"Streaming {id} started");
 
-        await foreach (var resp in client.GetStreamingResponseAsync(msg, cancellationToken: ct))
+        await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
         {
             var hasFinished = resp.FinishReason.HasValue;
             yield return new()
