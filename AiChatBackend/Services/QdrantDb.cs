@@ -126,7 +126,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
             """;
 
         logger.LogInformation("Sending to LLM for processing..");
-        var resp = await llm.GetResponseAsync(prompt);
+        var resp = await llm.GetResponseTextAsync(prompt);
         logger.LogInformation($"Response generated");
 
         return resp;
@@ -183,7 +183,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
             """;
 
         logger.LogInformation("Sending to LLM for processing..");
-        var resp = await llm.GetResponseAsync(prompt);
+        var resp = await llm.GetResponseTextAsync(prompt);
         logger.LogInformation($"Response generated");
 
         return resp;

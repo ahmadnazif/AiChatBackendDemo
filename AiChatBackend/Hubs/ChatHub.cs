@@ -41,7 +41,7 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
         msg.Add(new(role, text));
 
         Stopwatch sw = Stopwatch.StartNew();
-        var resp = await client.GetResponseAsync(msg);
+        var resp = await llm.GetResponseAsync(msg);
         sw.Stop();
 
         SingleChatResponse data = new()

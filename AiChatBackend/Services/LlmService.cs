@@ -35,7 +35,7 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
         return r.Text;
     }
 
-    public async Task<string> GetResponseAsync(string userPrompt, string systemPrompt = null)
+    public async Task<string> GetResponseTextAsync(string userPrompt, string systemPrompt = null)
     {
         List<ChatMessage> msg = [];
 
@@ -48,10 +48,9 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
         return r.Text;
     }
 
-    public async Task<string> GetResponseAsync(ChatMessage chatMessage)
+    public async Task<ChatResponse> GetResponseAsync(List<ChatMessage> chatMessages)
     {
-        var r = await client.GetResponseAsync(chatMessage);
-        return r.Text;
+        return await client.GetResponseAsync(chatMessages);
     }
 
     public async Task<List<string>> GenerateRandomSentencesAsync(int number, TextGenerationLength length)
