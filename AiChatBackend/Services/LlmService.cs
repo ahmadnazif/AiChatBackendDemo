@@ -48,6 +48,12 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
         return r.Text;
     }
 
+    public async Task<string> GetResponseAsync(ChatMessage chatMessage)
+    {
+        var r = await client.GetResponseAsync(chatMessage);
+        return r.Text;
+    }
+
     public async Task<List<string>> GenerateRandomSentencesAsync(int number, TextGenerationLength length)
     {
         List<ChatMessage> msg = [];
