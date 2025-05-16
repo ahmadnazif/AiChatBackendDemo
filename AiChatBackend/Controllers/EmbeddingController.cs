@@ -162,10 +162,16 @@ public class EmbeddingController(
         return await vector.QueryRecipeV2Async(userPrompt, ct);
     }
 
-    [HttpPost("test")]
+    [HttpPost("test1")]
     public async Task<ActionResult<List<string>>> Test([FromBody] AutoPopulateStatementRequest req, CancellationToken ct)
     {
         return await llm.GenerateRandomStatementsAsync(req.Number, req.Length);
+    }
+
+    [HttpPost("test2")]
+    public async Task<ActionResult<string>> Test2([FromBody] string userPrompt, CancellationToken ct)
+    {
+        return await llm.GeneralizeUserPromptAsJsonAsync(userPrompt);
     }
     #endregion
 

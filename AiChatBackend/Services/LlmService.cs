@@ -12,25 +12,37 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
     {
         List<ChatMessage> msg = [];
 
-        msg.Add(new(ChatRole.System, """
+        //msg.Add(new(ChatRole.System, """
+        //    You are a smart query interpreter. Analyze the user query and return:
+
+        //    - The cleaned query text that captures what the user is looking for
+        //    - Any filters or constraints that can be used for structured search
+        //    - Keep your response strictly in JSON format
+        //    """));
+
+        msg.Add(new(ChatRole.User, $"""
             You are a smart query interpreter. Analyze the user query and return:
-            
+            - Do not add any explanation, labels, markdown, or surrounding text
             - The cleaned query text that captures what the user is looking for
             - Any filters or constraints that can be used for structured search
-            - Keep your response strictly in JSON format
+            - Keep your response strictly in JSON format.
+            User prompt: {userPrompt}
             """));
 
-        msg.Add(new(ChatRole.User, userPrompt));
+        //msg.Add(new(ChatRole.User, userPrompt));
 
         var r = await client.GetResponseAsync(msg);
         return r.Text;
     }
 
-    public async Task<string> GetResponseAsync(string prompt)
+    public async Task<string> GetResponseAsync(string userPrompt, string systemPrompt = null)
     {
         List<ChatMessage> msg = [];
 
-        msg.Add(new(ChatRole.User, prompt));
+        if (!string.IsNullOrWhiteSpace(systemPrompt))
+            msg.Add(new(ChatRole.System, systemPrompt));
+
+        msg.Add(new(ChatRole.User, userPrompt));
 
         var r = await client.GetResponseAsync(msg);
         return r.Text;
@@ -40,27 +52,29 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
     {
         List<ChatMessage> msg = [];
 
-        msg.Add(new(ChatRole.System, """
-            You are a smart JSON generator. Your response must be a valid raw JSON string only,
-            without any explanation, markdown, or extra text.
+        //msg.Add(new(ChatRole.User, $"""
+        //    Generate a raw JSON array containing exactly {number} distinct, concise, and interesting text statements on random topics.
+        //    The length of text should be {length.ToString().ToLower()}. 
+        //    The output should ONLY be the JSON array with no additional surrounding text or explanations.
+        //    """));
+
+        // NEW
+        msg.Add(new(ChatRole.System, """          
+            You are a JSON generator. Your task is to return only a valid raw JSON array string. 
+            Do not add any explanation, labels, markdown, or surrounding text. 
+            The format must be like: ["Sentence one.", "Sentence two.", "Sentence three."]          
             """));
 
         msg.Add(new(ChatRole.User, $"""
-            Generate {number} distinct, concise, and interesting sentences on random topics. 
-            The length of text should be {length.ToString().ToLower()}. 
+            Generate a raw JSON array containing exactly {number} distinct, concise, and interesting sentences on random topics.
+            Each sentence must be surrounded by double quotes, and each item must be separated by commas.
+            The length of text should be {length.ToString().ToLower()}.
+            The response must be strictly valid JSON: just the array, no explanations, no markdown, no headers.
             """));
-
-        //var prompt = $"""
-        //    Generate a raw JSON array containing exactly {number} distinct, concise, and interesting text statements on random topics. 
-        //    The length of text should be {length.ToString().ToLower()}. 
-        //    The output should ONLY be the JSON array with no additional surrounding text or explanations.
-        //    """;
-
-        //msg.Add(new(ChatRole.User, prompt));
 
         try
         {
-            logger.LogInformation($"PROMPT = {prompt}");
+            //logger.LogInformation($"PROMPT = {prompt}");
             var r = await client.GetResponseAsync(msg);
             logger.LogInformation($"RESPONSE = {r.Text}");
 
@@ -73,11 +87,11 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
         }
     }
 
-    public async IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(string prompt, [EnumeratorCancellation] CancellationToken ct = default)
+    public IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(string userPrompt, CancellationToken ct = default)
     {
         List<ChatMessage> msg = [];
 
-        msg.Add(new(ChatRole.User, prompt));
+        msg.Add(new(ChatRole.User, userPrompt));
 
         return StreamResponseAsync(msg, ct);
 
