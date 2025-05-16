@@ -2,6 +2,7 @@
 using AiChatBackend.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
+using Microsoft.VisualBasic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
@@ -275,28 +276,28 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
 
-            var id = Generator.NextStreamingId();
-            logger.LogInformation($"Streaming: {id}");
-
-            
-
-            await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            await foreach(var resp in llm.StreamResponseAsync(chatMessages, ct))
             {
-                var hasFinished = resp.FinishReason.HasValue;
-                yield return new()
-                {
-                    StreamingId = id,
-                    HasFinished = hasFinished,
-                    Message = new(ChatSender.Assistant, resp.Text),
-                    ModelId = resp.ModelId,
-                    CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
-                };
-
-                if (hasFinished)
-                {
-                    logger.LogInformation($"Streaming {id} completed");
-                }
+                yield return resp;
             }
+
+            //await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            //{
+            //    var hasFinished = resp.FinishReason.HasValue;
+            //    yield return new()
+            //    {
+            //        StreamingId = id,
+            //        HasFinished = hasFinished,
+            //        Message = new(ChatSender.Assistant, resp.Text),
+            //        ModelId = resp.ModelId,
+            //        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+            //    };
+
+            //    if (hasFinished)
+            //    {
+            //        logger.LogInformation($"Streaming {id} completed");
+            //    }
+            //}
         }
         finally
         {
@@ -448,11 +449,6 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             logger.LogInformation($"Prompt: {req.Prompt}");
 
-            //ChatMessage chatMessage = new()
-            //{
-            //    Role = ChatHelper.GetChatRole(req.Prompt.Sender),
-            //    Text = req.Prompt.Text
-            //};
             ChatMessage chatMessage = new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text);
 
             logger.LogInformation((req.FileStream == null) ? "Filestream is NULL" : $"Filestream length: {req.FileStream.Length}");
@@ -460,28 +456,32 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
 
             chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
 
-            var id = Generator.NextStreamingId();
-            logger.LogInformation($"Streaming: {id}");
-
-            await foreach (var resp in client.GetStreamingResponseAsync(chatMessage, cancellationToken: ct))
+            await foreach(var resp in llm.StreamResponseAsync(chatMessage, ct))
             {
-                var hasFinished = resp.FinishReason.HasValue;
-                var txt = resp.Text;
-                //logger.LogInformation($"ID: {id} | {txt}");
-                yield return new()
-                {
-                    StreamingId = id,
-                    HasFinished = hasFinished,
-                    Message = new(ChatSender.Assistant, txt),
-                    ModelId = resp.ModelId,
-                    CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
-                };
-
-                if (hasFinished)
-                {
-                    logger.LogInformation($"Streaming {id} completed");
-                }
+                yield return resp;
             }
+
+            //var id = Generator.NextStreamingId();
+            //logger.LogInformation($"Streaming: {id}");
+
+            //await foreach (var resp in client.GetStreamingResponseAsync(chatMessage, cancellationToken: ct))
+            //{
+            //    var hasFinished = resp.FinishReason.HasValue;
+            //    var txt = resp.Text;
+            //    yield return new()
+            //    {
+            //        StreamingId = id,
+            //        HasFinished = hasFinished,
+            //        Message = new(ChatSender.Assistant, txt),
+            //        ModelId = resp.ModelId,
+            //        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+            //    };
+
+            //    if (hasFinished)
+            //    {
+            //        logger.LogInformation($"Streaming {id} completed");
+            //    }
+            //}
         }
         finally
         {
@@ -531,13 +531,6 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 foreach (var file in req.Latest.Files)
                     dataContents.Add(new(file.FileStream, file.MediaType));
 
-                //chatMessages.Add(new()
-                //{
-                //    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
-                //    Text = req.Latest.Message.Text,
-                //    Contents = [.. dataContents]
-                //});
-
                 ChatMessage chatMessage = new(ChatHelper.GetChatRole(req.Latest.Message.Sender), req.Latest.Message.Text)
                 {
                     Contents = [.. dataContents]
@@ -553,13 +546,6 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                     foreach (var file in m.Files)
                         prevDataContents.Add(new(file.FileStream, file.MediaType));
 
-                    //chatMessages.Add(new()
-                    //{
-                    //    Role = ChatHelper.GetChatRole(m.Message.Sender),
-                    //    Text = m.Message.Text,
-                    //    Contents = [.. prevDataContents]
-                    //});
-
                     ChatMessage chatMessage = new(ChatHelper.GetChatRole(m.Message.Sender), m.Message.Text)
                     {
                         Contents = [.. prevDataContents]
@@ -572,13 +558,6 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 foreach (var file in req.Latest.Files)
                     latestDataContents.Add(new(file.FileStream, file.MediaType));
 
-                //chatMessages.Add(new()
-                //{
-                //    Role = ChatHelper.GetChatRole(req.Latest.Message.Sender),
-                //    Text = req.Latest.Message.Text,
-                //    Contents = [.. latestDataContents]
-                //});
-
                 ChatMessage latestChatMessage = new(ChatHelper.GetChatRole(req.Latest.Message.Sender), req.Latest.Message.Text)
                 {
                     Contents = [.. latestDataContents]
@@ -587,27 +566,32 @@ public class ChatHub(ILogger<ChatHub> logger, IChatClient client, IHubUserCache 
                 chatMessages.Add(latestChatMessage);
             }
 
-            var id = Generator.NextStreamingId();
-            logger.LogInformation($"Streaming: {id}");
-
-            await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            await foreach(var resp in llm.StreamResponseAsync(chatMessages, ct))
             {
-                var hasFinished = resp.FinishReason.HasValue;
-                var txt = resp.Text;
-                yield return new()
-                {
-                    StreamingId = id,
-                    HasFinished = hasFinished,
-                    Message = new(ChatSender.Assistant, txt),
-                    ModelId = resp.ModelId,
-                    CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
-                };
-
-                if (hasFinished)
-                {
-                    logger.LogInformation($"Streaming {id} completed");
-                }
+                yield return resp;
             }
+
+            //var id = Generator.NextStreamingId();
+            //logger.LogInformation($"Streaming: {id}");
+
+            //await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+            //{
+            //    var hasFinished = resp.FinishReason.HasValue;
+            //    var txt = resp.Text;
+            //    yield return new()
+            //    {
+            //        StreamingId = id,
+            //        HasFinished = hasFinished,
+            //        Message = new(ChatSender.Assistant, txt),
+            //        ModelId = resp.ModelId,
+            //        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
+            //    };
+
+            //    if (hasFinished)
+            //    {
+            //        logger.LogInformation($"Streaming {id} completed");
+            //    }
+            //}
         }
         finally
         {

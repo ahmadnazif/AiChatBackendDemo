@@ -117,6 +117,12 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client)
         //}
     }
 
+    public IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(ChatMessage chatMessage, CancellationToken ct = default)
+    {
+        List<ChatMessage> msg = [chatMessage];
+        return StreamResponseAsync(msg, ct);
+    }
+
     public async IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(List<ChatMessage> chatMessages, [EnumeratorCancellation] CancellationToken ct = default)
     {
         var id = Generator.NextStreamingId();
