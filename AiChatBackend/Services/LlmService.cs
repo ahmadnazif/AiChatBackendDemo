@@ -1,12 +1,19 @@
 ﻿using Microsoft.Extensions.AI;
+using OllamaSharp.Models;
 using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
-public class LlmService(ILogger<LlmService> logger, IChatClient client)
+public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEmbeddingGenerator gen)
 {
     private readonly ILogger<LlmService> logger = logger;
     private readonly IChatClient client = client;
+    private readonly OllamaEmbeddingGenerator gen = gen;
+
+    public async Task<ReadOnlyMemory<float>> GenerateVectorAsync(string text, CancellationToken ct = default)
+    {
+        return await gen.GenerateVectorAsync(text, cancellationToken: ct);
+    }
 
     public async Task<string> GeneralizeUserPromptAsJsonAsync(string userPrompt)
     {

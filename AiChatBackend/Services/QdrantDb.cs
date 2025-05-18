@@ -12,11 +12,10 @@ using System.Text;
 
 namespace AiChatBackend.Services;
 
-public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen, LlmService llm)
+public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService llm)
 {
     private readonly ILogger<QdrantDb> logger = logger;
     private readonly IVectorStore store = store;
-    private readonly OllamaEmbeddingGenerator gen = gen;
     private readonly LlmService llm = llm;
 
     private const string COLL_RECIPE = "recipe";
@@ -68,7 +67,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
                     PrepTimeMinutes = model.PrepTimeMinutes,
                     Rating = model.Rating,
                     Tags = model.Tags,
-                    Vector = await gen.GenerateVectorAsync(GenerateEmbeddingInputString(model), cancellationToken: ct),
+                    Vector = await llm.GenerateVectorAsync(GenerateEmbeddingInputString(model), ct),
                 }, ct);
 
                 swi.Stop();
@@ -99,7 +98,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
         await coll.CreateCollectionIfNotExistsAsync(ct);
 
         logger.LogInformation("Generating prompt as vector..");
-        var vector = await gen.GenerateVectorAsync(req.Prompt, cancellationToken: ct);
+        var vector = await llm.GenerateVectorAsync(req.Prompt, ct);
 
         logger.LogInformation("Search in DB..");
         var result = coll.SearchEmbeddingAsync(vector, req.Top, cancellationToken: ct);
@@ -151,7 +150,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbedd
         logger.LogInformation($"OUT = {json}");
 
         logger.LogInformation("Generating prompt as vector..");
-        var vector = await gen.GenerateVectorAsync(json, cancellationToken: ct);
+        var vector = await llm.GenerateVectorAsync(json, ct);
 
         logger.LogInformation("Search in DB..");
         var result = coll.SearchEmbeddingAsync(vector, 5, cancellationToken: ct);

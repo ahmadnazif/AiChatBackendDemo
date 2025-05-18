@@ -7,10 +7,10 @@ using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
-public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingGenerator gen, InMemoryVectorStore store, TextSimilarityCache cache)
+public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, InMemoryVectorStore store, TextSimilarityCache cache)
 {
     private readonly ILogger<InMemoryVectorDb> logger = logger;
-    private readonly OllamaEmbeddingGenerator gen = gen;
+    private readonly LlmService llm = llm;
     private readonly InMemoryVectorStore store = store;
     private readonly TextSimilarityCache cache = cache;
     private const string COLL_TEXT = "text";
@@ -26,7 +26,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
             {
                 Id = Guid.NewGuid(),
                 Text = text,
-                Vector = await gen.GenerateVectorAsync(text, cancellationToken: ct)
+                Vector = await llm.GenerateVectorAsync(text, ct)
             };
 
             var id = await coll.UpsertAsync(record, ct);
@@ -97,7 +97,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, OllamaEmbeddingG
         var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
         await coll.CreateCollectionIfNotExistsAsync(ct);
 
-        var vector = await gen.GenerateVectorAsync(text, cancellationToken: ct);
+        var vector = await llm.GenerateVectorAsync(text, ct);
 
         var result = coll.SearchEmbeddingAsync(vector, 5, cancellationToken: ct);
 
