@@ -4,5 +4,6 @@ public enum LlmModelType
 {
     Embedding,
     Text,
-    Vision
+    Vision,
+    Multimodal
 }

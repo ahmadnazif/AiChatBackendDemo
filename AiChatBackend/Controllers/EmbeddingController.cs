@@ -48,6 +48,7 @@ public class EmbeddingController(
             LlmModelType.Embedding => config[$"{ollama}:EmbeddingModel"],
             LlmModelType.Text => config[$"{ollama}:TextModel"],
             LlmModelType.Vision => config[$"{ollama}:Vision"],
+            LlmModelType.Multimodal => config[$"{ollama}:Multimodal"],
             _ => "Unknown",
         };
     }
