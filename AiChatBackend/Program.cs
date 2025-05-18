@@ -31,7 +31,7 @@ builder.Services.AddChatClient(x =>
 builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
 //builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"])));
 //builder.Services.AddQdrantVectorStore();
-builder.Services.AddScoped<IVectorStorage, QdrantDb>();
+builder.Services.AddScoped<QdrantDb>();
 
 // Vector DB: InMemory
 builder.Services.AddInMemoryVectorStore();

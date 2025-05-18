@@ -12,7 +12,7 @@ using System.Text;
 
 namespace AiChatBackend.Services;
 
-public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen, LlmService llm) : IVectorStorage
+public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, OllamaEmbeddingGenerator gen, LlmService llm)
 {
     private readonly ILogger<QdrantDb> logger = logger;
     private readonly IVectorStore store = store;

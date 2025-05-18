@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
+[Obsolete("Use service directly")]
 public interface IVectorStorage
 {
     //Task<Embedding<float>> GenerateEmbeddingAsync(string text, CancellationToken ct = default);

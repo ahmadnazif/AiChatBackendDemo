@@ -10,12 +10,12 @@ namespace AiChatBackend.Controllers;
 [Route($"{BASE_ROUTE}/embedding")]
 [ApiController]
 public class EmbeddingController(
-    ILogger<EmbeddingController> logger, IConfiguration config, IVectorStorage vector,
-    InMemoryVectorDb imvDb, ApiClient api, LlmService llm, TextSimilarityCache tsCache) : ControllerBase
+    ILogger<EmbeddingController> logger, IConfiguration config, QdrantDb qdrant, InMemoryVectorDb imvDb,
+    ApiClient api, LlmService llm, TextSimilarityCache tsCache) : ControllerBase
 {
     private readonly ILogger<EmbeddingController> logger = logger;
     private readonly IConfiguration config = config;
-    private readonly IVectorStorage vector = vector;
+    private readonly QdrantDb qdrant = qdrant;
     private readonly InMemoryVectorDb imvDb = imvDb;
     private readonly ApiClient api = api;
     private readonly LlmService llm = llm;
@@ -134,7 +134,7 @@ public class EmbeddingController(
 
         Stopwatch sw1 = Stopwatch.StartNew();
         logger.LogInformation($"[2] Upserting {data.Count}..");
-        var resp = await vector.UpsertRecipesAsync(data, ct);
+        var resp = await qdrant.UpsertRecipesAsync(data, ct);
         sw1.Stop();
         logger.LogInformation($"[2] Upsert finished ({sw1.Elapsed} elapsed)..");
         logger.LogInformation($"[2] Resp = {JsonSerializer.Serialize(resp)}");
@@ -153,13 +153,13 @@ public class EmbeddingController(
         //    yield return r;
         //}
 
-        return await vector.QueryRecipeV1Async(req, ct);
+        return await qdrant.QueryRecipeV1Async(req, ct);
     }
 
     [HttpPost("recipe/query-v2")]
     public async Task<ActionResult<string>> RecipeQueryV2([FromBody] string userPrompt, CancellationToken ct)
     {
-        return await vector.QueryRecipeV2Async(userPrompt, ct);
+        return await qdrant.QueryRecipeV2Async(userPrompt, ct);
     }
 
     [HttpPost("test1")]
