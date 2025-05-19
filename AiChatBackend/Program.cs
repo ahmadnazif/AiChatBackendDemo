@@ -23,7 +23,7 @@ builder.Services.AddChatClient(x =>
     var endpoint = config[$"{ollama}:Endpoint"];
     var textModel = config[$"{ollama}:TextModel"];
     var visionModel = config[$"{ollama}:VisionModel"];
-    var multimodal = config[$"{ollama}:Multimodal"];
+    var multimodal = config[$"{ollama}:MultimodalModel"];
 
     return new OllamaChatClient(endpoint, multimodal);
 });

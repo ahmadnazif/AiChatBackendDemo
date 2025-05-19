@@ -4,11 +4,28 @@ using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
-public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEmbeddingGenerator gen)
+public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChatClient client, OllamaEmbeddingGenerator gen)
 {
     private readonly ILogger<LlmService> logger = logger;
+    private readonly IConfiguration config = config;
     private readonly IChatClient client = client;
     private readonly OllamaEmbeddingGenerator gen = gen;
+
+    public Dictionary<LlmModelType, string> Models
+    {
+        get
+        {
+            var ollama = "Ollama";
+
+            Dictionary<LlmModelType, string> models = [];
+            models.Add(LlmModelType.Vision, config[$"{ollama}:VisionModel"]);
+            models.Add(LlmModelType.Text, config[$"{ollama}:TextModel"]);
+            models.Add(LlmModelType.Embedding, config[$"{ollama}:EmbeddingModel"]);
+            models.Add(LlmModelType.Multimodal, config[$"{ollama}:MultimodalModel"]);
+
+            return models;
+        }
+    }
 
     public async Task<ReadOnlyMemory<float>> GenerateVectorAsync(string text, CancellationToken ct = default)
     {
@@ -70,7 +87,7 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
         return await client.GetResponseAsync(chatMessages);
     }
 
-    public async Task<List<string>> GenerateRandomSentencesAsync(int number, TextGenerationLength length, string modelId = null)
+    public async Task<List<string>> GenerateRandomSentencesAsync(int number, TextGenerationLength length, string modelId = null, string topic = null, string language = null)
     {
         List<ChatMessage> msg = [];
 
@@ -90,7 +107,8 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
         msg.Add(new(ChatRole.User, $"""
             Generate a raw JSON array containing exactly {number} distinct, concise, and interesting sentences on random topics.
             Each sentence must be surrounded by double quotes, and each item must be separated by commas.
-            The length of text should be {length.ToString().ToLower()}.
+            The length of text should be {length.ToString().ToLower()}. The topic is about {(string.IsNullOrWhiteSpace(topic) ? "random information" : topic)}.
+            The output language should be {(string.IsNullOrWhiteSpace(language) ? "English" : language)}
             The response must be strictly valid JSON: just the array, no explanations, no markdown, no headers.
             """));
 
@@ -98,13 +116,19 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
         {
             ChatOptions opt = new()
             {
-                ModelId = modelId
+                ModelId = string.IsNullOrWhiteSpace(modelId) ? null : modelId
             };
 
-            var r = await client.GetResponseAsync(msg, opt);
-            logger.LogInformation($"RESPONSE = {r.Text}");
+            var resp = await client.GetResponseAsync(msg, opt);
+            logger.LogInformation($"Model: {resp.ModelId}, RESPONSE = {resp.Text}");
 
-            return JsonSerializer.Deserialize<List<string>>(r.Text);
+            if(!StringHelper.IsValidJson(resp.Text))
+            {
+                logger.LogError("Response text is not a JSON string");
+                return [];
+            }
+
+            return JsonSerializer.Deserialize<List<string>>(resp.Text);
         }
         catch (Exception ex)
         {

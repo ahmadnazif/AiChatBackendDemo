@@ -42,15 +42,14 @@ public class EmbeddingController(
     [HttpGet("get-model-name")]
     public ActionResult<string> GetModelName([FromQuery] LlmModelType type)
     {
-        var ollama = "Ollama";
-        return type switch
-        {
-            LlmModelType.Embedding => config[$"{ollama}:EmbeddingModel"],
-            LlmModelType.Text => config[$"{ollama}:TextModel"],
-            LlmModelType.Vision => config[$"{ollama}:Vision"],
-            LlmModelType.Multimodal => config[$"{ollama}:Multimodal"],
-            _ => "Unknown",
-        };
+        var succ = llm.Models.TryGetValue(type, out string model);
+        return succ ? model : "Unknown";
+    }
+
+    [HttpGet("get-models-dictionary")]
+    public ActionResult<Dictionary<LlmModelType, string>> GetModelsDictionary()
+    {
+        return llm.Models;
     }
 
     #region Text
@@ -83,7 +82,7 @@ public class EmbeddingController(
             req.Number = 5;
 
         Stopwatch sw = Stopwatch.StartNew();
-        var statements = await llm.GenerateRandomSentencesAsync(req.Number, req.Length);
+        var statements = await llm.GenerateRandomSentencesAsync(req.Number, req.Length, req.ModelId, req.Topic, req.Language);
 
         List<ResponseBase> resps = [];
         foreach (var statement in statements)
@@ -93,10 +92,12 @@ public class EmbeddingController(
         }
         sw.Stop();
 
+        var isSuccess = resps.Exists(x => x.IsSuccess);
+
         return new ResponseBase
         {
-            IsSuccess = resps.Exists(x => x.IsSuccess),
-            Message = $"{resps.Count(x => x.IsSuccess)} statement populated ({sw.Elapsed} elapsed)"
+            IsSuccess = isSuccess,
+            Message = !isSuccess ? "Failed to generate statement. Please check API console log" : $"{resps.Count(x => x.IsSuccess)} statement populated ({sw.Elapsed} elapsed)"
         };
     }
 
