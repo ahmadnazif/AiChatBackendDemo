@@ -15,7 +15,7 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
         return await gen.GenerateVectorAsync(text, cancellationToken: ct);
     }
 
-    public async Task<string> GeneralizeUserPromptAsJsonAsync(string userPrompt)
+    public async Task<string> GeneralizeUserPromptAsJsonAsync(string userPrompt, string modelId = null)
     {
         List<ChatMessage> msg = [];
 
@@ -38,11 +38,16 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
 
         //msg.Add(new(ChatRole.User, userPrompt));
 
-        var r = await client.GetResponseAsync(msg);
+        ChatOptions options = new()
+        {
+             ModelId = modelId
+        };
+
+        var r = await client.GetResponseAsync(msg, options);
         return r.Text;
     }
 
-    public async Task<string> GetResponseTextAsync(string userPrompt, string systemPrompt = null)
+    public async Task<string> GetResponseTextAsync(string userPrompt, string systemPrompt = null, string modelId = null)
     {
         List<ChatMessage> msg = [];
 
@@ -51,7 +56,12 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
 
         msg.Add(new(ChatRole.User, userPrompt));
 
-        var r = await client.GetResponseAsync(msg);
+        ChatOptions opt = new()
+        {
+             ModelId = modelId
+        };
+
+        var r = await client.GetResponseAsync(msg, opt);
         return r.Text;
     }
 
@@ -60,7 +70,7 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
         return await client.GetResponseAsync(chatMessages);
     }
 
-    public async Task<List<string>> GenerateRandomSentencesAsync(int number, TextGenerationLength length)
+    public async Task<List<string>> GenerateRandomSentencesAsync(int number, TextGenerationLength length, string modelId = null)
     {
         List<ChatMessage> msg = [];
 
@@ -86,8 +96,12 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
 
         try
         {
-            //logger.LogInformation($"PROMPT = {prompt}");
-            var r = await client.GetResponseAsync(msg);
+            ChatOptions opt = new()
+            {
+                ModelId = modelId
+            };
+
+            var r = await client.GetResponseAsync(msg, opt);
             logger.LogInformation($"RESPONSE = {r.Text}");
 
             return JsonSerializer.Deserialize<List<string>>(r.Text);
@@ -106,27 +120,6 @@ public class LlmService(ILogger<LlmService> logger, IChatClient client, OllamaEm
         msg.Add(new(ChatRole.User, userPrompt));
 
         return StreamResponseAsync(msg, ct);
-
-        //var id = Generator.NextStreamingId();
-        //logger.LogInformation($"Streaming {id} started");
-
-        //await foreach (var resp in client.GetStreamingResponseAsync(msg, cancellationToken: ct))
-        //{
-        //    var hasFinished = resp.FinishReason.HasValue;
-        //    yield return new()
-        //    {
-        //        StreamingId = id,
-        //        HasFinished = hasFinished,
-        //        Message = new(ChatSender.Assistant, resp.Text),
-        //        ModelId = resp.ModelId,
-        //        CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
-        //    };
-
-        //    if (hasFinished)
-        //    {
-        //        logger.LogInformation($"Streaming {id} completed");
-        //    }
-        //}
     }
 
     public IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(ChatMessage chatMessage, CancellationToken ct = default)
