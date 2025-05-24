@@ -21,11 +21,12 @@ builder.Services.AddChatClient(x =>
 {
     const string ollama = "Ollama";
     var endpoint = config[$"{ollama}:Endpoint"];
-    var textModel = config[$"{ollama}:TextModel"];
-    var visionModel = config[$"{ollama}:VisionModel"];
-    var multimodal = config[$"{ollama}:MultimodalModel"];
+    //var textModel = config[$"{ollama}:TextModel"];
+    //var visionModel = config[$"{ollama}:VisionModel"];
+    //var multimodal = config[$"{ollama}:MultimodalModel"];
 
-    return new OllamaChatClient(endpoint, multimodal);
+    var textModel = LlmModelHelper.GetModel(config, LlmModelType.Text);
+    return new OllamaChatClient(endpoint, textModel.Default);
 });
 
 // Vector DB: Qdrant

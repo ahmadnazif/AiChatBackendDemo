@@ -39,6 +39,7 @@ public class EmbeddingController(
     //    });
     //}
 
+    [Obsolete]
     [HttpGet("get-model-name")]
     public ActionResult<string> GetModelName([FromQuery] LlmModelType type)
     {
@@ -46,6 +47,13 @@ public class EmbeddingController(
         return succ ? model : "Unknown";
     }
 
+    [HttpGet("get-models")]
+    public ActionResult<LlmModel> GetModel([FromQuery] LlmModelType type)
+    {
+        return LlmModelHelper.GetModel(config, type);
+    }
+
+    [Obsolete]
     [HttpGet("get-models-dictionary")]
     public ActionResult<Dictionary<LlmModelType, string>> GetModelsDictionary()
     {
@@ -174,6 +182,15 @@ public class EmbeddingController(
     public async Task<ActionResult<string>> Test2([FromBody] string userPrompt, CancellationToken ct)
     {
         return await llm.GeneralizeUserPromptAsJsonAsync(userPrompt);
+    }
+
+    [HttpPost("test3")]
+    public ActionResult Test3()
+    {
+        var model = LlmModelHelper.GetModel(config, LlmModelType.Text);
+        logger.LogInformation(JsonSerializer.Serialize(model));
+
+        return Ok();
     }
     #endregion
 

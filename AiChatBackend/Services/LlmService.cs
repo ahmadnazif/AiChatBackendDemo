@@ -11,6 +11,7 @@ public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChat
     private readonly IChatClient client = client;
     private readonly OllamaEmbeddingGenerator gen = gen;
 
+    [Obsolete("Use LlamaModelHelper")]
     public Dictionary<LlmModelType, string> Models
     {
         get
