@@ -47,11 +47,7 @@ public class EmbeddingController(
         return succ ? model : "Unknown";
     }
 
-    [HttpGet("get-models")]
-    public ActionResult<LlmModel> GetModel([FromQuery] LlmModelType type)
-    {
-        return LlmModelHelper.GetModel(config, type);
-    }
+    
 
     [Obsolete]
     [HttpGet("get-models-dictionary")]
