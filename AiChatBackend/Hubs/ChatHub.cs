@@ -104,7 +104,7 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
         }
 
         Stopwatch sw = Stopwatch.StartNew();
-        var resp = await llm.GetResponseAsync(chatMessages);
+        var resp = await llm.GetResponseAsync(chatMessages, req.ModelId);
         sw.Stop();
 
         var sender = ChatHelper.GetChatSender(resp.Messages[0].Role); // resp.Message.Role
@@ -169,7 +169,7 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
                 chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
 
-            await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessages, req.ModelId, ct))
             {
                 yield return resp;
             }
@@ -249,7 +249,7 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
                 chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
             }
 
-            await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessages, req.ModelId, ct))
             {
                 yield return resp;
             }
@@ -332,7 +332,7 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
                     chatMessages.Add(new(ChatHelper.GetChatRole(req.Prompt.Sender), req.Prompt.Text));
                 }
 
-                await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
+                await foreach (var resp in llm.StreamResponseAsync(chatMessages, req.ModelId, ct))
                 {
                     await writer.WriteAsync(resp, ct);
 
@@ -418,7 +418,7 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
 
             chatMessage.Contents.Add(new DataContent(req.FileStream, req.MediaType));
 
-            await foreach (var resp in llm.StreamResponseAsync(chatMessage, ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessage, req.ModelId, ct))
             {
                 yield return resp;
             }
@@ -528,7 +528,7 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
                 chatMessages.Add(latestChatMessage);
             }
 
-            await foreach (var resp in llm.StreamResponseAsync(chatMessages, ct))
+            await foreach (var resp in llm.StreamResponseAsync(chatMessages, req.ModelId, ct))
             {
                 yield return resp;
             }

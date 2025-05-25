@@ -58,7 +58,7 @@ public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChat
 
         ChatOptions options = new()
         {
-             ModelId = modelId
+            ModelId = modelId
         };
 
         var r = await client.GetResponseAsync(msg, options);
@@ -76,16 +76,21 @@ public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChat
 
         ChatOptions opt = new()
         {
-             ModelId = modelId
+            ModelId = modelId
         };
 
         var r = await client.GetResponseAsync(msg, opt);
         return r.Text;
     }
 
-    public async Task<ChatResponse> GetResponseAsync(List<ChatMessage> chatMessages)
+    public async Task<ChatResponse> GetResponseAsync(List<ChatMessage> chatMessages, string modelId = null)
     {
-        return await client.GetResponseAsync(chatMessages);
+        ChatOptions opt = new()
+        {
+            ModelId = modelId
+        };
+
+        return await client.GetResponseAsync(chatMessages, opt);
     }
 
     public async Task<List<string>> GenerateRandomSentencesAsync(int number, TextGenerationLength length, string modelId = null, string topic = null, string language = null)
@@ -123,7 +128,7 @@ public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChat
             var resp = await client.GetResponseAsync(msg, opt);
             logger.LogInformation($"Model: {resp.ModelId}, RESPONSE = {resp.Text}");
 
-            if(!StringHelper.IsValidJson(resp.Text))
+            if (!StringHelper.IsValidJson(resp.Text))
             {
                 logger.LogError("Response text is not a JSON string");
                 return [];
@@ -138,27 +143,32 @@ public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChat
         }
     }
 
-    public IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(string userPrompt, CancellationToken ct = default)
+    public IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(string userPrompt, string modelId = null, CancellationToken ct = default)
     {
         List<ChatMessage> msg = [];
 
         msg.Add(new(ChatRole.User, userPrompt));
 
-        return StreamResponseAsync(msg, ct);
+        return StreamResponseAsync(msg, modelId, ct);
     }
 
-    public IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(ChatMessage chatMessage, CancellationToken ct = default)
+    public IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(ChatMessage chatMessage, string modelId = null, CancellationToken ct = default)
     {
         List<ChatMessage> msg = [chatMessage];
-        return StreamResponseAsync(msg, ct);
+        return StreamResponseAsync(msg, modelId, ct);
     }
 
-    public async IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(List<ChatMessage> chatMessages, [EnumeratorCancellation] CancellationToken ct = default)
+    public async IAsyncEnumerable<StreamingChatResponse> StreamResponseAsync(List<ChatMessage> chatMessages, string modelId = null, [EnumeratorCancellation] CancellationToken ct = default)
     {
         var id = Generator.NextStreamingId();
         logger.LogInformation($"Streaming {id} started");
 
-        await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, cancellationToken: ct))
+        ChatOptions opt = new()
+        {
+            ModelId = modelId
+        };
+
+        await foreach (var resp in client.GetStreamingResponseAsync(chatMessages, opt, cancellationToken: ct))
         {
             var hasFinished = resp.FinishReason.HasValue;
             yield return new()
