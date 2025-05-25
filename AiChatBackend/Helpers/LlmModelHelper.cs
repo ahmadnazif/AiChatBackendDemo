@@ -12,8 +12,8 @@ public static class LlmModelHelper
         return new()
         {
             ModelType = modelType,
-            Default = defaultModel,
-            Models = [.. models]
+            DefaultModelId = defaultModel,
+            ModelIds = [.. models]
         };
     }
 }

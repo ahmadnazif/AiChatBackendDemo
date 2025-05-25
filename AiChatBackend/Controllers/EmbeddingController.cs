@@ -39,22 +39,20 @@ public class EmbeddingController(
     //    });
     //}
 
-    [Obsolete]
-    [HttpGet("get-model-name")]
-    public ActionResult<string> GetModelName([FromQuery] LlmModelType type)
-    {
-        var succ = llm.Models.TryGetValue(type, out string model);
-        return succ ? model : "Unknown";
-    }
+    //[Obsolete]
+    //[HttpGet("get-model-name")]
+    //public ActionResult<string> GetModelName([FromQuery] LlmModelType type)
+    //{
+    //    var succ = llm.Models.TryGetValue(type, out string model);
+    //    return succ ? model : "Unknown";
+    //}    
 
-    
-
-    [Obsolete]
-    [HttpGet("get-models-dictionary")]
-    public ActionResult<Dictionary<LlmModelType, string>> GetModelsDictionary()
-    {
-        return llm.Models;
-    }
+    //[Obsolete]
+    //[HttpGet("get-models-dictionary")]
+    //public ActionResult<Dictionary<LlmModelType, string>> GetModelsDictionary()
+    //{
+    //    return llm.Models;
+    //}
 
     #region Text
     [HttpGet("text/list-all-from-cache")]

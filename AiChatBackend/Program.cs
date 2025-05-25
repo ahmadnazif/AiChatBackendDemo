@@ -26,7 +26,7 @@ builder.Services.AddChatClient(x =>
     //var multimodal = config[$"{ollama}:MultimodalModel"];
 
     var textModel = LlmModelHelper.GetModel(config, LlmModelType.Text);
-    return new OllamaChatClient(endpoint, textModel.Default);
+    return new OllamaChatClient(endpoint, textModel.DefaultModelId);
 });
 
 // Vector DB: Qdrant

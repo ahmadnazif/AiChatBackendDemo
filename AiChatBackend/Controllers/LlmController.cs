@@ -13,4 +13,17 @@ public class LlmController(IConfiguration config) : ControllerBase
     {
         return LlmModelHelper.GetModel(config, type);
     }
+
+    [HttpGet("list-all-models")]
+    public ActionResult<List<LlmModel>> ListAllModels()
+    {
+        List<LlmModel> all = [
+            LlmModelHelper.GetModel(config, LlmModelType.Text),
+            LlmModelHelper.GetModel(config, LlmModelType.Vision),
+            LlmModelHelper.GetModel(config, LlmModelType.Multimodal),
+            LlmModelHelper.GetModel(config, LlmModelType.Embedding)
+            ];
+
+        return all;
+    }
 }
