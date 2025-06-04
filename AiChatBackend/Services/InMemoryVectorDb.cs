@@ -54,6 +54,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         try
         {
             var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
+            var x = store.GetCollection<Guid, TextVector>("");
             await coll.CreateCollectionIfNotExistsAsync(ct);
 
             return await coll.GetAsync(key, cancellationToken: ct);
