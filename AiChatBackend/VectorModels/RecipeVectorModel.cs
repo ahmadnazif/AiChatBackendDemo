@@ -4,22 +4,22 @@ namespace AiChatBackend.VectorModels;
 
 public class RecipeVectorModel : RecipeVectorModelBase
 {
-    [VectorStoreRecordVector(768, DistanceFunction = DistanceFunction.CosineSimilarity, IndexKind = IndexKind.Hnsw)] public ReadOnlyMemory<float> Vector { get; set; }
+    [VectorStoreVector(768, DistanceFunction = DistanceFunction.CosineSimilarity, IndexKind = IndexKind.Hnsw)] public ReadOnlyMemory<float> Vector { get; set; }
 }
 
 public class RecipeVectorModelBase
 {
-    [VectorStoreRecordKey] public ulong Id { get; set; }
-    [VectorStoreRecordData] public string Name { get; set; }
-    [VectorStoreRecordData] public List<string> Ingredients { get; set; }
-    [VectorStoreRecordData] public List<string> Instructions { get; set; }
-    [VectorStoreRecordData] public int PrepTimeMinutes { get; set; }
-    [VectorStoreRecordData] public int CookTimeMinutes { get; set; }
-    [VectorStoreRecordData] public string Difficulty { get; set; }
-    [VectorStoreRecordData] public string Cuisine { get; set; }
-    [VectorStoreRecordData] public int CaloriesPerServing { get; set; }
-    [VectorStoreRecordData] public List<string> Tags { get; set; }
-    [VectorStoreRecordData] public string Image { get; set; }
-    [VectorStoreRecordData] public float Rating { get; set; }
-    [VectorStoreRecordData] public List<string> MealType { get; set; }
+    [VectorStoreKey] public ulong Id { get; set; }
+    [VectorStoreData] public string Name { get; set; }
+    [VectorStoreData] public List<string> Ingredients { get; set; }
+    [VectorStoreData] public List<string> Instructions { get; set; }
+    [VectorStoreData] public int PrepTimeMinutes { get; set; }
+    [VectorStoreData] public int CookTimeMinutes { get; set; }
+    [VectorStoreData] public string Difficulty { get; set; }
+    [VectorStoreData] public string Cuisine { get; set; }
+    [VectorStoreData] public int CaloriesPerServing { get; set; }
+    [VectorStoreData] public List<string> Tags { get; set; }
+    [VectorStoreData] public string Image { get; set; }
+    [VectorStoreData] public float Rating { get; set; }
+    [VectorStoreData] public List<string> MealType { get; set; }
 }
