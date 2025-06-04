@@ -20,7 +20,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         try
         {
             var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
-            await coll.CreateCollectionIfNotExistsAsync(ct);
+            await coll.EnsureCollectionExistsAsync(ct);
 
             TextVector record = new()
             {
@@ -29,13 +29,13 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
                 Vector = await llm.GenerateVectorAsync(text, ct)
             };
 
-            var id = await coll.UpsertAsync(record, ct);
+            await coll.UpsertAsync(record, ct);
             cache.Add(record);
 
             return new()
             {
                 IsSuccess = true,
-                Message = id.ToString()
+                Message = record.Id.ToString()
             };
         }
         catch (Exception ex)
@@ -55,7 +55,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         {
             var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
             var x = store.GetCollection<Guid, TextVector>("");
-            await coll.CreateCollectionIfNotExistsAsync(ct);
+            await coll.EnsureCollectionExistsAsync(ct);
 
             return await coll.GetAsync(key, cancellationToken: ct);
         }
@@ -71,7 +71,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         try
         {
             var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
-            await coll.CreateCollectionIfNotExistsAsync(ct);
+            await coll.EnsureCollectionExistsAsync(ct);
 
             await coll.DeleteAsync(key, ct);
             cache.Remove(key);
@@ -96,11 +96,11 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
     public async IAsyncEnumerable<TextSimilarityResult> QueryTextSimilarityAsync(string text, [EnumeratorCancellation] CancellationToken ct)
     {
         var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
-        await coll.CreateCollectionIfNotExistsAsync(ct);
+        await coll.EnsureCollectionExistsAsync(ct);
 
         var vector = await llm.GenerateVectorAsync(text, ct);
 
-        var result = coll.SearchEmbeddingAsync(vector, 5, cancellationToken: ct);
+        var result = coll.SearchAsync(vector, 5, cancellationToken: ct);
 
         await foreach (var r in result)
         {
