@@ -12,10 +12,10 @@ using System.Text;
 
 namespace AiChatBackend.Services;
 
-public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService llm)
+public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, LlmService llm)
 {
     private readonly ILogger<QdrantDb> logger = logger;
-    private readonly IVectorStore store = store;
+    private readonly QdrantVectorStore store = store;
     private readonly LlmService llm = llm;
 
     private const string COLL_RECIPE = "recipe";
@@ -44,7 +44,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService l
         try
         {
             var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
-            await coll.CreateCollectionIfNotExistsAsync(ct);
+            await coll.EnsureCollectionExistsAsync(ct);
 
             List<ulong> ids = [];
 
@@ -52,7 +52,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService l
             foreach (var model in data)
             {
                 Stopwatch swi = Stopwatch.StartNew();
-                var id = await coll.UpsertAsync(new RecipeVectorModel
+                await coll.UpsertAsync(new RecipeVectorModel
                 {
                     Id = model.Id,
                     Name = model.Name,
@@ -71,8 +71,8 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService l
                 }, ct);
 
                 swi.Stop();
-                logger.LogInformation($"Data '{id}' upserted ({swi.Elapsed} elapsed)");
-                ids.Add(id);
+                logger.LogInformation($"Data '{model.Id}' upserted ({swi.Elapsed} elapsed)");
+                ids.Add(model.Id);
             }
 
             sw.Stop();
@@ -95,13 +95,13 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService l
     public async Task<string> QueryRecipeV1Async(EmbeddingQueryRequest req, CancellationToken ct)
     {
         var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
-        await coll.CreateCollectionIfNotExistsAsync(ct);
+        await coll.EnsureCollectionExistsAsync(ct);
 
         logger.LogInformation("Generating prompt as vector..");
         var vector = await llm.GenerateVectorAsync(req.Prompt, ct);
 
         logger.LogInformation("Search in DB..");
-        var result = coll.SearchEmbeddingAsync(vector, req.Top, cancellationToken: ct);
+        var result = coll.SearchAsync(vector, req.Top, cancellationToken: ct);
 
         // 1: Build context
         // -----------------
@@ -141,7 +141,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService l
     public async Task<string> QueryRecipeV2Async(string userPrompt, CancellationToken ct)
     {
         var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
-        await coll.CreateCollectionIfNotExistsAsync(ct);
+        await coll.EnsureCollectionExistsAsync(ct);
 
         // 1: Generalize prompt as JSON
         // -----------------------------
@@ -153,7 +153,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, IVectorStore store, LlmService l
         var vector = await llm.GenerateVectorAsync(json, ct);
 
         logger.LogInformation("Search in DB..");
-        var result = coll.SearchEmbeddingAsync(vector, 5, cancellationToken: ct);
+        var result = coll.SearchAsync(vector, 5, cancellationToken: ct);
 
         // 1: Build context
         // -----------------
