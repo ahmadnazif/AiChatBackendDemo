@@ -113,10 +113,16 @@ public class EmbeddingController(
         return await imvDb.DeleteTextAsync(guid, ct);
     }
 
-    [HttpGet("text/query-similarity")]
-    public IAsyncEnumerable<TextSimilarityResult> TextQuery([FromQuery] string text, CancellationToken ct)
+    [HttpGet("text/query-from-db")]
+    public IAsyncEnumerable<TextSimilarityResult> TextFromDb([FromQuery] string text, [FromQuery] int top, CancellationToken ct)
     {
-        return imvDb.QueryTextSimilarityAsync(text, ct);
+        return imvDb.QueryTextSimilarityAsync(text, top, ct);
+    }
+
+    [HttpPost("text/query-to-llm")]
+    public IAsyncEnumerable<string> TextQueryToLlm([FromQuery] string text, [FromQuery] int top, [FromQuery] string? modelId, CancellationToken ct)
+    {
+        return imvDb.QueryToLlmAsync(text, top, modelId, ct);
     }
     #endregion
 

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.VectorData;
 using Microsoft.SemanticKernel.Connectors.InMemory;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace AiChatBackend.Services;
 
@@ -93,14 +94,14 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         }
     }
 
-    public async IAsyncEnumerable<TextSimilarityResult> QueryTextSimilarityAsync(string text, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<TextSimilarityResult> QueryTextSimilarityAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
     {
         var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
         await coll.EnsureCollectionExistsAsync(ct);
 
         var vector = await llm.GenerateVectorAsync(text, ct);
 
-        var result = coll.SearchAsync(vector, 5, cancellationToken: ct);
+        var result = coll.SearchAsync(vector, top, cancellationToken: ct);
 
         await foreach (var r in result)
         {
@@ -112,4 +113,43 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
             };
         }
     }
+
+    public async IAsyncEnumerable<string> QueryToLlmAsync(string userPrompt, int top, string? modelId, [EnumeratorCancellation] CancellationToken ct)
+    {
+        var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
+        await coll.EnsureCollectionExistsAsync(ct);
+
+        // 1: Build context
+        // -----------------
+        
+        logger.LogInformation("Building context from result..");
+        StringBuilder sb = new();
+
+        await foreach (var item in QueryTextSimilarityAsync(userPrompt, top, ct))
+        {
+            sb.AppendLine($"- {item.Text}");
+            sb.AppendLine();
+        }
+
+        // 2: Compose prompt to LLM
+        // -------------------------
+
+        var prompt = $"""
+            You are a helpful text analyzer.
+
+            A user asked: "{userPrompt}"
+
+            Based on the internal search, here are some relevant info:
+            {sb}
+
+            Using the above information, answer the user's question as helpfully as possible.
+            """;
+
+        logger.LogInformation("Sending to LLM for processing..");
+        await foreach(var item in llm.StreamResponseAsync(prompt, modelId, ct))
+        {
+            yield return item.Message.Text;
+        }
+    }
+
 }
