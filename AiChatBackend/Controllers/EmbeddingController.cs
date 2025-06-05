@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace AiChatBackend.Controllers;
 
@@ -120,9 +121,23 @@ public class EmbeddingController(
     }
 
     [HttpPost("text/query-to-llm")]
-    public IAsyncEnumerable<string> TextQueryToLlm([FromQuery] string text, [FromQuery] int top, [FromQuery] string? modelId, CancellationToken ct)
+    public IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextSimilarityLlmRequest req, CancellationToken ct)
     {
-        return imvDb.QueryToLlmAsync(text, top, modelId, ct);
+        return imvDb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
+    }
+
+    [HttpPost("text/stream-post")]
+    public async IAsyncEnumerable<string> StreamPost([EnumeratorCancellation] CancellationToken ct)
+    {
+        await Task.Delay(1000, ct);
+        yield return $"{DateTime.Now.Second} ";
+    }
+
+    [HttpGet("text/stream-get")]
+    public async IAsyncEnumerable<string> StreamGet([EnumeratorCancellation] CancellationToken ct)
+    {
+        await Task.Delay(1000, ct);
+        yield return $"{DateTime.Now.Second} ";
     }
     #endregion
 

@@ -114,20 +114,17 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         }
     }
 
-    public async IAsyncEnumerable<string> QueryToLlmAsync(string userPrompt, int top, string? modelId, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> QueryToLlmAsync(string userPrompt, List<string> resultFromDb, string? modelId, [EnumeratorCancellation] CancellationToken ct)
     {
-        var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
-        await coll.EnsureCollectionExistsAsync(ct);
-
         // 1: Build context
         // -----------------
         
         logger.LogInformation("Building context from result..");
         StringBuilder sb = new();
 
-        await foreach (var item in QueryTextSimilarityAsync(userPrompt, top, ct))
+        foreach (var item in resultFromDb)
         {
-            sb.AppendLine($"- {item.Text}");
+            sb.AppendLine($"- {item}");
             sb.AppendLine();
         }
 
@@ -148,6 +145,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         logger.LogInformation("Sending to LLM for processing..");
         await foreach(var item in llm.StreamResponseAsync(prompt, modelId, ct))
         {
+            //logger.LogInformation(item.Message.Text);
             yield return item.Message.Text;
         }
     }
