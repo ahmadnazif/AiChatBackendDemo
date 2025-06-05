@@ -120,11 +120,11 @@ public class EmbeddingController(
         return imvDb.QueryTextSimilarityAsync(text, top, ct);
     }
 
-    [HttpPost("text/query-to-llm")]
-    public IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextSimilarityLlmRequest req, CancellationToken ct)
-    {
-        return imvDb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
-    }
+    //[HttpPost("text/query-to-llm")]
+    //public IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextSimilarityLlmRequest req, CancellationToken ct)
+    //{
+    //    return imvDb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
+    //}
 
     [HttpPost("text/stream-post")]
     public async IAsyncEnumerable<string> StreamPost([EnumeratorCancellation] CancellationToken ct)
