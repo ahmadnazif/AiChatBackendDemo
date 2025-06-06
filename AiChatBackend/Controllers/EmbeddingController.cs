@@ -14,7 +14,7 @@ namespace AiChatBackend.Controllers;
 [ApiController]
 public class EmbeddingController(
     ILogger<EmbeddingController> logger, IConfiguration config, QdrantDb qdrant, InMemoryVectorDb imvDb,
-    ApiClient api, LlmService llm, TextSimilarityCache tsCache) : ControllerBase
+    ApiClient api, LlmService llm, TextAnalysisCache tsCache) : ControllerBase
 {
     private readonly ILogger<EmbeddingController> logger = logger;
     private readonly IConfiguration config = config;
@@ -22,7 +22,7 @@ public class EmbeddingController(
     private readonly InMemoryVectorDb imvDb = imvDb;
     private readonly ApiClient api = api;
     private readonly LlmService llm = llm;
-    private readonly TextSimilarityCache tsCache = tsCache;
+    private readonly TextAnalysisCache tsCache = tsCache;
 
     //[HttpPost("generate-embedding")]
     //public async Task<ActionResult<string>> GenerateEmbedding([FromBody] string text, CancellationToken ct)
@@ -116,14 +116,14 @@ public class EmbeddingController(
         return await imvDb.DeleteTextAsync(guid, ct);
     }
 
-    [HttpPost("text/query-from-db")]
-    public IAsyncEnumerable<TextAnalysisSimilarityResult> TextFromDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
+    [HttpPost("text/query-vector-db")]
+    public IAsyncEnumerable<TextAnalysisSimilarityResult> TextQueryVectorDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
     {
         return imvDb.QueryTextSimilarityAsync(req.Prompt, req.Top, ct);
     }
 
-    [HttpPost("text/query-to-llm")]
-    public async IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextAnalysisLlmRequest req, [EnumeratorCancellation] CancellationToken ct)
+    [HttpPost("text/query-llm")]
+    public async IAsyncEnumerable<string> TextQueryLlm([FromBody] TextAnalysisLlmRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         // 1: Build context
         // -----------------

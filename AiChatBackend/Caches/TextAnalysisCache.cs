@@ -1,6 +1,6 @@
 ﻿namespace AiChatBackend.Caches;
 
-public class TextSimilarityCache
+public class TextAnalysisCache
 {
     private readonly Dictionary<Guid, TextVector> dict = [];
 

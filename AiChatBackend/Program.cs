@@ -15,7 +15,7 @@ using Qdrant.Client;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
-builder.Services.AddSingleton<TextSimilarityCache>();
+builder.Services.AddSingleton<TextAnalysisCache>();
 
 builder.Services.AddChatClient(x =>
 {

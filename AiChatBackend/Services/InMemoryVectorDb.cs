@@ -8,12 +8,12 @@ using System.Text;
 
 namespace AiChatBackend.Services;
 
-public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, InMemoryVectorStore store, TextSimilarityCache cache)
+public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, InMemoryVectorStore store, TextAnalysisCache cache)
 {
     private readonly ILogger<InMemoryVectorDb> logger = logger;
     private readonly LlmService llm = llm;
     private readonly InMemoryVectorStore store = store;
-    private readonly TextSimilarityCache cache = cache;
+    private readonly TextAnalysisCache cache = cache;
     private const string COLL_TEXT = "text";
 
     public async Task<ResponseBase> UpsertTextAsync(string text, CancellationToken ct)
@@ -105,6 +105,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
 
         await foreach (var r in result)
         {
+            logger.LogInformation(r.Record.Text);
             yield return new()
             {
                 Guid = r.Record.Id.ToString(),
