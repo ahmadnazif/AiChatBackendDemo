@@ -120,24 +120,43 @@ public class EmbeddingController(
         return imvDb.QueryTextSimilarityAsync(text, top, ct);
     }
 
-    //[HttpPost("text/query-to-llm")]
-    //public IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextSimilarityLlmRequest req, CancellationToken ct)
-    //{
-    //    return imvDb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
-    //}
+    [HttpPost("text/query-to-llm")]
+    public async IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextSimilarityLlmRequest req, [EnumeratorCancellation] CancellationToken ct)
+    {
+        var stream = imvDb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
+        await foreach(var item in stream)
+        {
+            if (item.HasFinished)
+                yield break;
+
+            yield return item.Message.Text;
+        }
+    }
 
     [HttpPost("text/stream-post")]
-    public async IAsyncEnumerable<string> StreamPost([EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> StreamPost([FromBody] int max, [EnumeratorCancellation] CancellationToken ct)
     {
-        await Task.Delay(1000, ct);
-        yield return $"{DateTime.Now.Second} ";
+        for (int i = 0; i < max; i++)
+        {
+            if(i == max)
+                yield break;            
+
+            await Task.Delay(1000, ct);
+            yield return i.ToString();
+        }
     }
 
     [HttpGet("text/stream-get")]
-    public async IAsyncEnumerable<string> StreamGet([EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> StreamGet([FromQuery] int max, [EnumeratorCancellation] CancellationToken ct)
     {
-        await Task.Delay(1000, ct);
-        yield return $"{DateTime.Now.Second} ";
+        for (int i = 0; i < max; i++)
+        {
+            if (i == max)
+                yield break;
+
+            await Task.Delay(1000, ct);
+            yield return i.ToString();
+        }
     }
     #endregion
 
