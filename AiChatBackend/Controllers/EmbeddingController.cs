@@ -1,9 +1,11 @@
 ﻿using AiChatBackend.Caches;
 using AiChatBackend.Services;
 using Microsoft.AspNetCore.Mvc;
+using OllamaSharp.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace AiChatBackend.Controllers;
@@ -123,12 +125,35 @@ public class EmbeddingController(
     [HttpPost("text/query-to-llm")]
     public async IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextAnalysisLlmRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
-        var stream = imvDb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
-        await foreach(var item in stream)
-        {
-            if (item.HasFinished)
-                yield break;
+        // 1: Build context
+        // -----------------
 
+        logger.LogInformation("Building context from result..");
+        StringBuilder sb = new();
+
+        foreach (var item in req.Results)
+        {
+            sb.AppendLine($"- {item}");
+            sb.AppendLine();
+        }
+
+        // 2: Compose prompt to LLM
+        // -------------------------
+
+        var prompt = $"""
+            You are a helpful text analyzer.
+
+            A user asked: "{req.OriginalPrompt}"
+
+            Based on the internal search, here are some relevant info:
+            {sb}
+
+            Using the above information, answer the user's question as helpfully as possible.
+            """;
+
+        logger.LogInformation("Sending to LLM for processing..");
+        await foreach (var item in llm.StreamResponseAsync(prompt, req.ModelId, ct))
+        {
             yield return item.Message.Text;
         }
     }
