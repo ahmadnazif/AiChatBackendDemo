@@ -55,7 +55,7 @@ public class EmbeddingController(
     //    return llm.Models;
     //}
 
-    #region Text
+    #region Text anaysis
     [HttpGet("text/list-all-from-cache")]
     public ActionResult<List<TextVector>> TextListAllFromCache(CancellationToken ct)
     {
@@ -115,13 +115,13 @@ public class EmbeddingController(
     }
 
     [HttpPost("text/query-from-db")]
-    public IAsyncEnumerable<TextSimilarityResult> TextFromDb([FromBody] TextSimilarityVectorDbRequest req, CancellationToken ct)
+    public IAsyncEnumerable<TextAnalysisSimilarityResult> TextFromDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
     {
         return imvDb.QueryTextSimilarityAsync(req.Prompt, req.Top, ct);
     }
 
     [HttpPost("text/query-to-llm")]
-    public async IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextSimilarityLlmRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> TextQueryToLlm([FromBody] TextAnalysisLlmRequest req, [EnumeratorCancellation] CancellationToken ct)
     {
         var stream = imvDb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
         await foreach(var item in stream)

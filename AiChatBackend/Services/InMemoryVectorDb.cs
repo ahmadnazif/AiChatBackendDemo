@@ -94,7 +94,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         }
     }
 
-    public async IAsyncEnumerable<TextSimilarityResult> QueryTextSimilarityAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<TextAnalysisSimilarityResult> QueryTextSimilarityAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
     {
         var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
         await coll.EnsureCollectionExistsAsync(ct);
@@ -113,42 +113,6 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
             };
         }
     }
-
-    //public async IAsyncEnumerable<string> QueryToLlmAsync(string userPrompt, List<string> resultFromDb, string? modelId, [EnumeratorCancellation] CancellationToken ct)
-    //{
-    //    // 1: Build context
-    //    // -----------------
-        
-    //    logger.LogInformation("Building context from result..");
-    //    StringBuilder sb = new();
-
-    //    foreach (var item in resultFromDb)
-    //    {
-    //        sb.AppendLine($"- {item}");
-    //        sb.AppendLine();
-    //    }
-
-    //    // 2: Compose prompt to LLM
-    //    // -------------------------
-
-    //    var prompt = $"""
-    //        You are a helpful text analyzer.
-
-    //        A user asked: "{userPrompt}"
-
-    //        Based on the internal search, here are some relevant info:
-    //        {sb}
-
-    //        Using the above information, answer the user's question as helpfully as possible.
-    //        """;
-
-    //    logger.LogInformation("Sending to LLM for processing..");
-    //    await foreach(var item in llm.StreamResponseAsync(prompt, modelId, ct))
-    //    {
-    //        //logger.LogInformation(item.Message.Text);
-    //        yield return item.Message.Text;
-    //    }
-    //}
 
     public async IAsyncEnumerable<StreamingChatResponse> QueryToLlmAsync(string userPrompt, List<string> resultFromDb, string? modelId, [EnumeratorCancellation] CancellationToken ct)
     {

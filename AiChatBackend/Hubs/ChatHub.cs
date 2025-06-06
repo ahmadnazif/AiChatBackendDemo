@@ -563,7 +563,7 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
         }
     }
 
-    public IAsyncEnumerable<StreamingChatResponse> StreamTextSimilarityLlmAsync(TextSimilarityLlmRequest req, CancellationToken ct)
+    public IAsyncEnumerable<StreamingChatResponse> StreamTextSimilarityLlmAsync(TextAnalysisLlmRequest req, CancellationToken ct)
     {
         return imvdb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
 
