@@ -9,13 +9,11 @@ using System.Threading.Channels;
 
 namespace AiChatBackend.Hubs;
 
-public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService llm, InMemoryVectorDb imvDb) : Hub
+public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService llm) : Hub
 {
     private readonly ILogger<ChatHub> logger = logger;
-    //private readonly IChatClient client = client;
     private readonly IHubUserCache cache = cache;
     private readonly LlmService llm = llm;
-    private readonly InMemoryVectorDb imvdb = imvDb;
 
     public async Task ReceiveSingleAsync(SingleChatRequest req)
     {
@@ -562,36 +560,6 @@ public class ChatHub(ILogger<ChatHub> logger, IHubUserCache cache, LlmService ll
                 logger.LogInformation($"Streaming cancelled at {DateTime.Now.ToLongTimeString()}");
         }
     }
-
-    public IAsyncEnumerable<StreamingChatResponse> StreamTextSimilarityLlmAsync(TextAnalysisLlmRequest req, CancellationToken ct)
-    {
-        return imvdb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
-
-        //try
-        //{
-        //    var username = cache.FindUsername(Context);
-
-        //    if (username == null)
-        //    {
-        //        logger.LogWarning($"Username {username} not found in cache");
-        //        yield break;
-        //    }
-
-        //    if (req == null)
-        //    {
-        //        logger.LogError($"{nameof(req)} is NULL");
-        //        yield break;
-        //    }
-
-        //    return imvdb.QueryToLlmAsync(req.OriginalPrompt, req.Results, req.ModelId, ct);
-        //}
-        //finally
-        //{
-        //    if (ct.IsCancellationRequested)
-        //        logger.LogInformation($"Streaming cancelled at {DateTime.Now.ToLongTimeString()}");
-        //}
-    }
-
 
     private void LogSent(ChatResponse resp, Stopwatch sw)
     {
