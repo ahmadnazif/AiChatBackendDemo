@@ -180,6 +180,11 @@ public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChat
                 CreatedAt = resp.CreatedAt ?? DateTime.UtcNow
             };
 
+            if (ct.IsCancellationRequested)
+            {
+                logger.LogInformation($"Streaming {id} cancelled by request");
+            }
+
             if (hasFinished)
             {
                 logger.LogInformation($"Streaming {id} completed");

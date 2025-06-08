@@ -123,7 +123,7 @@ public class EmbeddingController(
     }
 
     [HttpPost("text/query-llm")]
-    public async IAsyncEnumerable<string> TextQueryLlm([FromBody] TextAnalysisLlmRequest req, [EnumeratorCancellation] CancellationToken ct)
+    public IAsyncEnumerable<StreamingChatResponse> TextQueryLlm([FromBody] TextAnalysisLlmRequest req, CancellationToken ct)
     {
         // 1: Build context
         // -----------------
@@ -152,19 +152,17 @@ public class EmbeddingController(
             """;
 
         logger.LogInformation("Sending to LLM for processing..");
-        await foreach (var item in llm.StreamResponseAsync(prompt, req.ModelId, ct))
-        {
-            yield return item.Message.Text;
-        }
+        return llm.StreamResponseAsync(prompt, req.ModelId, ct);
     }
+
 
     [HttpPost("text/stream-post")]
     public async IAsyncEnumerable<string> StreamPost([FromBody] int max, [EnumeratorCancellation] CancellationToken ct)
     {
         for (int i = 0; i < max; i++)
         {
-            if(i == max)
-                yield break;            
+            if (i == max)
+                yield break;
 
             await Task.Delay(1000, ct);
             yield return i.ToString();
