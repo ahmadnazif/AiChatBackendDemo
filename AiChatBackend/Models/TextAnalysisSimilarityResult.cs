@@ -1,8 +1,6 @@
 ﻿namespace AiChatBackend.Models;
 
-public class TextAnalysisSimilarityResult
+public class TextAnalysisSimilarityResult : VectorDbQueryResult
 {
     public string? Guid { get; set; }
-    public string? Text { get; set; }
-    public double Score { get; set; }
 }

@@ -46,4 +46,25 @@ public class RagRecipeController(ILogger<RagRecipeController> logger, IConfigura
     {
         return await qdrant.CountRecipeAsync(ct);
     }
+
+    [HttpPost("query-v1")]
+    public async Task<ActionResult<string>> QueryV1([FromBody] EmbeddingQueryRequest req, CancellationToken ct)
+    {
+        if (req.Top < 1)
+            req.Top = 1;
+
+        return await qdrant.QueryRecipeV1Async(req, ct);
+    }
+
+    [HttpPost("query-v2")]
+    public async Task<ActionResult<string>> QueryV2([FromBody] string userPrompt, CancellationToken ct)
+    {
+        return await qdrant.QueryRecipeV2Async(userPrompt, ct);
+    }
+
+    [HttpPost("query-vector-db")]
+    public IAsyncEnumerable<TextAnalysisSimilarityResult> TextQueryVectorDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
+    {
+        return imvDb.QueryTextSimilarityAsync(req.Prompt, req.Top, ct);
+    }
 }

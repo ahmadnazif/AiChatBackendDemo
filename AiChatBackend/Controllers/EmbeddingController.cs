@@ -208,26 +208,6 @@ public class EmbeddingController(
     //    return resp;
     //}
 
-    [HttpPost("recipe/query")]
-    public async Task<ActionResult<string>> RecipeQuery([FromBody] EmbeddingQueryRequest req, CancellationToken ct)
-    {
-        if (req.Top < 1)
-            req.Top = 1;
-
-        //await foreach (var r in vector.QueryRecipeAsync(req, ct))
-        //{
-        //    yield return r;
-        //}
-
-        return await qdrant.QueryRecipeV1Async(req, ct);
-    }
-
-    [HttpPost("recipe/query-v2")]
-    public async Task<ActionResult<string>> RecipeQueryV2([FromBody] string userPrompt, CancellationToken ct)
-    {
-        return await qdrant.QueryRecipeV2Async(userPrompt, ct);
-    }
-
     [HttpPost("test1")]
     public async Task<ActionResult<List<string>>> Test([FromBody] AutoPopulateStatementRequest req, CancellationToken ct)
     {
