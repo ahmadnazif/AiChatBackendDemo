@@ -30,8 +30,8 @@ builder.Services.AddChatClient(x =>
 });
 
 // Vector DB: Qdrant
-//builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
-builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:Port"])));
+// builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:GrpcPort"]));
+builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:GrpcPort"])));
 builder.Services.AddQdrantVectorStore();
 builder.Services.AddScoped<QdrantDb>();
 
