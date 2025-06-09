@@ -5,6 +5,7 @@ using OllamaSharp;
 using Qdrant.Client;
 using System.Diagnostics;
 using System.Security.AccessControl;
+using System.Text;
 
 namespace AiChatBackend.Controllers;
 
@@ -79,6 +80,34 @@ public class RagRecipeController(ILogger<RagRecipeController> logger, IConfigura
     [HttpPost("query-llm")]
     public IAsyncEnumerable<StreamingChatResponse> QueryLlm([FromBody] LlmRequest req, CancellationToken ct)
     {
+        // 1: Build context
+        // -----------------
 
+        logger.LogInformation("Building context from result..");
+        StringBuilder sb = new();
+
+        foreach (var item in req.Results)
+        {
+            sb.AppendLine($"- {item}");
+            sb.AppendLine();
+        }
+
+        // 2: Compose prompt to LLM
+        // -------------------------
+
+        var prompt = $"""
+            You are a helpful cooking assistant.
+
+            A user asked: "{req.OriginalPrompt}"
+
+            Based on the internal search, here are some relevant recipes:
+            {sb}
+
+            Using the above information, answer the user's question as helpfully as possible.
+            If none of the recipes fit, say so.
+            """;
+
+        logger.LogInformation("Sending to LLM for processing..");
+        return llm.StreamResponseAsync(prompt, req.ModelId, ct);
     }
 }

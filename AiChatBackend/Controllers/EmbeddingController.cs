@@ -116,7 +116,7 @@ public class EmbeddingController(
     }
 
     [HttpPost("text/query-vector-db")]
-    public IAsyncEnumerable<TextAnalysisSimilarityResult> TextQueryVectorDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
+    public IAsyncEnumerable<TextAnalysisSimilarityResult> TextQueryVectorDb([FromBody] VdbRequest req, CancellationToken ct)
     {
         return imvDb.QueryTextSimilarityAsync(req.Prompt, req.Top, ct);
     }
