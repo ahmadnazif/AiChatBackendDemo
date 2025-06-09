@@ -93,6 +93,33 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantC
         }
     }
 
+    public async IAsyncEnumerable<RecipeVdbQueryResult> QueryAsyncAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
+    {
+        var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
+        await coll.EnsureCollectionExistsAsync(ct);
+
+        logger.LogInformation("Generalize prompt as JSON via LLM..");
+        var json = await llm.GeneralizeUserPromptAsJsonAsync(text);
+        logger.LogInformation($"OUT = {json}");
+
+        logger.LogInformation("Generating prompt as vector..");
+        var vector = await llm.GenerateVectorAsync(json, ct);
+
+        logger.LogInformation("Search in DB..");
+        var result = coll.SearchAsync(vector, top, cancellationToken: ct);
+
+        await foreach(var item in result)
+        {
+            logger.LogInformation($"{item.Record.Name} ({item.Score})");
+            yield return new()
+            {
+                 Id = item.Record.Id,
+                 Text = item.Record.Name,
+                 Score = item.Score.Value
+            };
+        }
+    }
+
     public async Task<string> QueryRecipeV1Async(EmbeddingQueryRequest req, CancellationToken ct)
     {
         var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);

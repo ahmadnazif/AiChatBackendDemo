@@ -11,23 +11,6 @@ public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChat
     private readonly IChatClient client = client;
     private readonly OllamaEmbeddingGenerator gen = gen;
 
-    [Obsolete("Use LlamaModelHelper")]
-    public Dictionary<LlmModelType, string> Models
-    {
-        get
-        {
-            var ollama = "Ollama";
-
-            Dictionary<LlmModelType, string> models = [];
-            models.Add(LlmModelType.Vision, config[$"{ollama}:VisionModel"]);
-            models.Add(LlmModelType.Text, config[$"{ollama}:TextModel"]);
-            models.Add(LlmModelType.Embedding, config[$"{ollama}:EmbeddingModel"]);
-            models.Add(LlmModelType.Multimodal, config[$"{ollama}:MultimodalModel"]);
-
-            return models;
-        }
-    }
-
     public async Task<ReadOnlyMemory<float>> GenerateVectorAsync(string text, CancellationToken ct = default)
     {
         return await gen.GenerateVectorAsync(text, cancellationToken: ct);

@@ -63,8 +63,8 @@ public class RagRecipeController(ILogger<RagRecipeController> logger, IConfigura
     }
 
     [HttpPost("query-vector-db")]
-    public IAsyncEnumerable<TextAnalysisSimilarityResult> TextQueryVectorDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
+    public IAsyncEnumerable<RecipeVdbQueryResult> QueryVectorDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
     {
-        return imvDb.QueryTextSimilarityAsync(req.Prompt, req.Top, ct);
+        return qdrant.QueryTextSimilarityAsync(req.Prompt, req.Top, ct);
     }
 }
