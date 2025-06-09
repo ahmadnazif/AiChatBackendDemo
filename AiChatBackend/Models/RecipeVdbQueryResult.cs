@@ -1,6 +1,6 @@
 ﻿namespace AiChatBackend.Models;
 
-public class RecipeVdbQueryResult : VectorDbQueryResult
+public class RecipeVdbQueryResult : VdbQueryResult
 {
     public ulong Id { get; set; }
 }
