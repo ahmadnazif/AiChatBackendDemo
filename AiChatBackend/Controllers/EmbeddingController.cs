@@ -14,13 +14,12 @@ namespace AiChatBackend.Controllers;
 [ApiController]
 public class EmbeddingController(
     ILogger<EmbeddingController> logger, IConfiguration config, QdrantDb qdrant, InMemoryVectorDb imvDb,
-    ApiClient api, LlmService llm, TextAnalysisCache tsCache) : ControllerBase
+    LlmService llm, TextAnalysisCache tsCache) : ControllerBase
 {
     private readonly ILogger<EmbeddingController> logger = logger;
     private readonly IConfiguration config = config;
     private readonly QdrantDb qdrant = qdrant;
     private readonly InMemoryVectorDb imvDb = imvDb;
-    private readonly ApiClient api = api;
     private readonly LlmService llm = llm;
     private readonly TextAnalysisCache tsCache = tsCache;
 
@@ -184,30 +183,30 @@ public class EmbeddingController(
     #endregion
 
     #region Recipe
-    [HttpGet("recipe/list-all-from-external-api")]
-    public async Task<ActionResult<List<RecipeVectorModelBase>>> RecipeListAllFromExternalApi([FromQuery] int limit, CancellationToken ct)
-    {
-        return await api.ListRecipesAsync(limit, ct);
-    }
+    //[HttpGet("recipe/list-all-from-external-api")]
+    //public async Task<ActionResult<List<RecipeVectorModelBase>>> RecipeListAllFromExternalApi([FromQuery] int limit, CancellationToken ct)
+    //{
+    //    return await api.ListRecipesAsync(limit, ct);
+    //}
 
-    [HttpPost("recipe/feed-all-from-external-api")]
-    public async Task<ActionResult<ResponseBase>> RecipeFeedAll(CancellationToken ct)
-    {
-        Stopwatch sw0 = Stopwatch.StartNew();
-        logger.LogInformation("[1] Obtaining recipes..");
-        var data = await api.ListRecipesAsync(50, ct);
-        sw0.Stop();
-        logger.LogInformation($"[1] {data.Count} data obtained ({sw0.Elapsed} elapsed)");
+    //[HttpPost("recipe/feed-all-from-external-api")]
+    //public async Task<ActionResult<ResponseBase>> RecipeFeedAll(CancellationToken ct)
+    //{
+    //    Stopwatch sw0 = Stopwatch.StartNew();
+    //    logger.LogInformation("[1] Obtaining recipes..");
+    //    var data = await api.ListRecipesAsync(50, ct);
+    //    sw0.Stop();
+    //    logger.LogInformation($"[1] {data.Count} data obtained ({sw0.Elapsed} elapsed)");
 
-        Stopwatch sw1 = Stopwatch.StartNew();
-        logger.LogInformation($"[2] Upserting {data.Count}..");
-        var resp = await qdrant.UpsertRecipesAsync(data, ct);
-        sw1.Stop();
-        logger.LogInformation($"[2] Upsert finished ({sw1.Elapsed} elapsed)..");
-        logger.LogInformation($"[2] Resp = {JsonSerializer.Serialize(resp)}");
+    //    Stopwatch sw1 = Stopwatch.StartNew();
+    //    logger.LogInformation($"[2] Upserting {data.Count}..");
+    //    var resp = await qdrant.UpsertRecipesAsync(data, ct);
+    //    sw1.Stop();
+    //    logger.LogInformation($"[2] Upsert finished ({sw1.Elapsed} elapsed)..");
+    //    logger.LogInformation($"[2] Resp = {JsonSerializer.Serialize(resp)}");
 
-        return resp;
-    }
+    //    return resp;
+    //}
 
     [HttpPost("recipe/query")]
     public async Task<ActionResult<string>> RecipeQuery([FromBody] EmbeddingQueryRequest req, CancellationToken ct)

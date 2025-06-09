@@ -12,10 +12,11 @@ using System.Text;
 
 namespace AiChatBackend.Services;
 
-public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, LlmService llm)
+public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantClient qdrant, LlmService llm)
 {
     private readonly ILogger<QdrantDb> logger = logger;
     private readonly QdrantVectorStore store = store;
+    private readonly QdrantClient qdrant = qdrant;
     private readonly LlmService llm = llm;
 
     private const string COLL_RECIPE = "recipe";
@@ -186,6 +187,14 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, LlmServ
         logger.LogInformation($"Response generated");
 
         return resp;
+    }
+
+    public async Task<ulong> CountRecipeAsync(CancellationToken ct)
+    {
+        var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
+        await coll.EnsureCollectionExistsAsync(ct);
+
+        return await qdrant.CountAsync(COLL_RECIPE, cancellationToken: ct);
     }
 
     #endregion
