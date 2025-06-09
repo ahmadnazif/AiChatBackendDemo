@@ -21,6 +21,20 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantC
 
     private const string COLL_RECIPE = "recipe";
 
+    public async Task<bool> IsQdrantRunningAsync(CancellationToken ct)
+    {
+        try
+        {
+            var r = await qdrant.HealthAsync(ct);
+            return r != null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+            return false;
+        }
+    }
+
     #region Recipe
 
     private static string GenerateEmbeddingInputString(RecipeVectorModelBase model)
@@ -112,14 +126,14 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantC
 
         var result = coll.SearchAsync(vector, top, cancellationToken: ct);
 
-        await foreach(var item in result)
+        await foreach (var item in result)
         {
             logger.LogInformation($"{item.Record.Name} ({item.Score})");
             yield return new()
             {
-                 Id = item.Record.Id,
-                 Text = item.Record.Name,
-                 Score = item.Score.Value
+                Id = item.Record.Id,
+                Text = item.Record.Name,
+                Score = item.Score.Value
             };
         }
     }
@@ -223,7 +237,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantC
     public async Task<ulong> CountRecipeAsync(CancellationToken ct)
     {
         return await qdrant.CountAsync(COLL_RECIPE, cancellationToken: ct);
-    }
+    }    
 
     #endregion
 }

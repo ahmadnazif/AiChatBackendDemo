@@ -1,12 +1,13 @@
 ﻿using AiChatBackend.Services;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Mvc;
+using Qdrant.Client;
 using System.Diagnostics;
 using System.Security.AccessControl;
 
 namespace AiChatBackend.Controllers;
 
-[Route("rag/recipe")]
+[Route($"{BASE_ROUTE}/rag/recipe")]
 [ApiController]
 public class RagRecipeController(ILogger<RagRecipeController> logger, IConfiguration config, ApiClient api, QdrantDb qdrant, LlmService llm) : ControllerBase
 {
@@ -19,7 +20,7 @@ public class RagRecipeController(ILogger<RagRecipeController> logger, IConfigura
     [HttpGet("is-qdrant-running")]
     public async Task<ActionResult<bool>> IsQdrantRunning(CancellationToken ct)
     {
-        return await api.IsQdrantRunningAsync(ct);
+        return await qdrant.IsQdrantRunningAsync(ct);
     }
 
     [HttpGet("external-api/list-all-recipe")]

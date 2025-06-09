@@ -11,33 +11,6 @@ public class ApiClient(ILogger<ApiClient> logger, IConfiguration config, IHttpCl
     private readonly IHttpClientFactory fac = fac;
     private readonly TimeSpan httpClientTimeout = TimeSpan.FromSeconds(3);
 
-    public async Task<bool> IsQdrantRunningAsync(CancellationToken ct = default)
-    {
-        try
-        {
-            UriBuilder u = new("http", config["Qdrant:Host"], int.Parse(config["Qdrant:Port"]));
-
-            var httpClient = fac.CreateClient();
-            httpClient.BaseAddress = u.Uri;
-            httpClient.Timeout = httpClientTimeout;
-            var resp = await httpClient.GetAsync(string.Empty, ct);
-
-            if (resp.IsSuccessStatusCode)
-                return true;
-            else
-            {
-                logger.LogError(resp.StatusCode.ToString());
-                return false;
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.Message);
-            return false;
-        }
-    }
-
-
     public async Task<OllamaTagsResponse> GetOllamaTagsAsync(string baseurl)
     {
         try
