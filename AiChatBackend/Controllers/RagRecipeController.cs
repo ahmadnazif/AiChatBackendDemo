@@ -1,6 +1,7 @@
 ﻿using AiChatBackend.Services;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Mvc;
+using OllamaSharp;
 using Qdrant.Client;
 using System.Diagnostics;
 using System.Security.AccessControl;
@@ -73,5 +74,11 @@ public class RagRecipeController(ILogger<RagRecipeController> logger, IConfigura
     public IAsyncEnumerable<RecipeVdbQueryResult> QueryVectorDb([FromBody] VdbRequest req, CancellationToken ct)
     {
         return qdrant.QueryAsync(req.Prompt, req.Top, ct);
+    }
+
+    [HttpPost("query-llm")]
+    public IAsyncEnumerable<StreamingChatResponse> QueryLlm([FromBody] LlmRequest req, CancellationToken ct)
+    {
+
     }
 }

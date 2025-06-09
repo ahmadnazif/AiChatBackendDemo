@@ -122,7 +122,7 @@ public class EmbeddingController(
     }
 
     [HttpPost("text/query-llm")]
-    public IAsyncEnumerable<StreamingChatResponse> TextQueryLlm([FromBody] TextAnalysisLlmRequest req, CancellationToken ct)
+    public IAsyncEnumerable<StreamingChatResponse> TextQueryLlm([FromBody] LlmRequest req, CancellationToken ct)
     {
         // 1: Build context
         // -----------------
