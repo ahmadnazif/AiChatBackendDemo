@@ -94,7 +94,7 @@ public class InMemoryVectorDb(ILogger<InMemoryVectorDb> logger, LlmService llm, 
         }
     }
 
-    public async IAsyncEnumerable<TextAnalysisSimilarityResult> QueryTextSimilarityAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<TextAnalysisVdbQueryResult> QueryTextSimilarityAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
     {
         var coll = store.GetCollection<Guid, TextVector>(COLL_TEXT);
         await coll.EnsureCollectionExistsAsync(ct);
