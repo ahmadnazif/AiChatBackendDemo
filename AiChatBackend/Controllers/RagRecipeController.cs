@@ -16,6 +16,12 @@ public class RagRecipeController(ILogger<RagRecipeController> logger, IConfigura
     private readonly QdrantDb qdrant = qdrant;
     private readonly LlmService llm = llm;
 
+    [HttpGet("is-qdrant-running")]
+    public async Task<ActionResult<bool>> IsQdrantRunning(CancellationToken ct)
+    {
+        return await api.IsQdrantRunningAsync(ct);
+    }
+
     [HttpGet("external-api/list-all-recipe")]
     public async Task<ActionResult<List<RecipeVectorModelBase>>> RecipeListAllFromExternalApi([FromQuery] int limit, CancellationToken ct)
     {
@@ -63,8 +69,8 @@ public class RagRecipeController(ILogger<RagRecipeController> logger, IConfigura
     }
 
     [HttpPost("query-vector-db")]
-    public IAsyncEnumerable<RecipeVdbQueryResult> QueryVectorDb([FromBody] TextAnalysisVdbRequest req, CancellationToken ct)
+    public IAsyncEnumerable<RecipeVdbQueryResult> QueryVectorDb([FromBody] VdbRequest req, CancellationToken ct)
     {
-        return qdrant.QueryTextSimilarityAsync(req.Prompt, req.Top, ct);
+        return qdrant.QueryAsync(req.Prompt, req.Top, ct);
     }
 }

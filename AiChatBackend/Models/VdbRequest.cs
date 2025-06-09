@@ -1,7 +1,6 @@
 ﻿namespace AiChatBackend.Models;
 
-[Obsolete("Use VdbRequest")]
-public class TextAnalysisVdbRequest
+public class VdbRequest
 {
     public string? Prompt { get; set; }
     public int Top { get; set; }

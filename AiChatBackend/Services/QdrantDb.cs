@@ -93,7 +93,7 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantC
         }
     }
 
-    public async IAsyncEnumerable<RecipeVdbQueryResult> QueryAsyncAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<RecipeVdbQueryResult> QueryAsync(string text, int top, [EnumeratorCancellation] CancellationToken ct)
     {
         var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
         await coll.EnsureCollectionExistsAsync(ct);
@@ -106,6 +106,10 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantC
         var vector = await llm.GenerateVectorAsync(json, ct);
 
         logger.LogInformation("Search in DB..");
+
+        if (top < 1)
+            top = 1;
+
         var result = coll.SearchAsync(vector, top, cancellationToken: ct);
 
         await foreach(var item in result)
@@ -218,9 +222,6 @@ public class QdrantDb(ILogger<QdrantDb> logger, QdrantVectorStore store, QdrantC
 
     public async Task<ulong> CountRecipeAsync(CancellationToken ct)
     {
-        var coll = store.GetCollection<ulong, RecipeVectorModel>(COLL_RECIPE);
-        await coll.EnsureCollectionExistsAsync(ct);
-
         return await qdrant.CountAsync(COLL_RECIPE, cancellationToken: ct);
     }
 
