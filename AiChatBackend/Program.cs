@@ -11,6 +11,7 @@ using Microsoft.Extensions.AI;
 using AiChatBackend.Services;
 using Microsoft.SemanticKernel;
 using Qdrant.Client;
+using OllamaSharp;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -29,6 +30,19 @@ builder.Services.AddChatClient(x =>
     return new OllamaChatClient(endpoint, textModel.DefaultModelId);
 });
 
+builder.Services.AddChatClient(x =>
+{
+    const string ollama = "Ollama";
+    var endpoint = config[$"{ollama}:Endpoint"];
+    //var textModel = config[$"{ollama}:TextModel"];
+    //var visionModel = config[$"{ollama}:VisionModel"];
+    //var multimodal = config[$"{ollama}:MultimodalModel"];
+
+    var textModel = LlmModelHelper.GetModel(config, LlmModelType.Text);
+    //return new OllamaChatClient(endpoint, textModel.DefaultModelId);
+    return new OllamaApiClient(endpoint, textModel.DefaultModelId);
+});
+
 // Vector DB: Qdrant
 // builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:GrpcPort"]));
 builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:GrpcPort"])));
@@ -38,10 +52,6 @@ builder.Services.AddScoped<QdrantDb>();
 // Vector DB: InMemory
 builder.Services.AddInMemoryVectorStore();
 builder.Services.AddScoped<InMemoryVectorDb>();
-
-//#pragma warning disable SKEXP0070 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-//builder.Services.AddOllamaTextEmbeddingGeneration(config["Ollama:EmbeddingModel"], new Uri(config[$"Ollama:Endpoint"]));
-//builder.Services.AddTransient(sp => new Kernel(sp));
 
 builder.Services.AddSingleton(x =>
 {
