@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.AI;
-using OllamaSharp.Models;
 using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
