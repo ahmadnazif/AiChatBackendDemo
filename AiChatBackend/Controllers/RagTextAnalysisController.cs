@@ -9,11 +9,10 @@ namespace AiChatBackend.Controllers;
 
 [Route($"{BASE_ROUTE}/rag/text-analysis")]
 [ApiController]
-public class RagTextAnalysisController(ILogger<RagTextAnalysisController> logger, IConfiguration config, InMemoryVectorDb imvDb,
+public class RagTextAnalysisController(ILogger<RagTextAnalysisController> logger, InMemoryVectorDb imvDb,
     LlmService llm, TextAnalysisCache tsCache) : ControllerBase
 {
     private readonly ILogger<RagTextAnalysisController> logger = logger;
-    private readonly IConfiguration config = config;
     private readonly InMemoryVectorDb imvDb = imvDb;
     private readonly LlmService llm = llm;
     private readonly TextAnalysisCache tsCache = tsCache;
