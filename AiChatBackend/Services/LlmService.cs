@@ -3,12 +3,12 @@ using System.Runtime.CompilerServices;
 
 namespace AiChatBackend.Services;
 
-public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChatClient client, OllamaEmbeddingGenerator gen)
+public class LlmService(ILogger<LlmService> logger, IConfiguration config, IChatClient client, IEmbeddingGenerator<string, Embedding<float>> gen)
 {
     private readonly ILogger<LlmService> logger = logger;
     private readonly IConfiguration config = config;
     private readonly IChatClient client = client;
-    private readonly OllamaEmbeddingGenerator gen = gen;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> gen = gen;
 
     public async Task<ReadOnlyMemory<float>> GenerateVectorAsync(string text, CancellationToken ct = default)
     {

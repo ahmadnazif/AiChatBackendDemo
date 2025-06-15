@@ -22,38 +22,12 @@ builder.Services.AddChatClient(x =>
 {
     const string ollama = "Ollama";
     var endpoint = config[$"{ollama}:Endpoint"];
-    //var textModel = config[$"{ollama}:TextModel"];
-    //var visionModel = config[$"{ollama}:VisionModel"];
-    //var multimodal = config[$"{ollama}:MultimodalModel"];
 
     var textModel = LlmModelHelper.GetModel(config, LlmModelType.Text);
-    return new OllamaChatClient(endpoint, textModel.DefaultModelId);
-});
-
-builder.Services.AddChatClient(x =>
-{
-    const string ollama = "Ollama";
-    var endpoint = config[$"{ollama}:Endpoint"];
-    //var textModel = config[$"{ollama}:TextModel"];
-    //var visionModel = config[$"{ollama}:VisionModel"];
-    //var multimodal = config[$"{ollama}:MultimodalModel"];
-
-    var textModel = LlmModelHelper.GetModel(config, LlmModelType.Text);
-    //return new OllamaChatClient(endpoint, textModel.DefaultModelId);
     return new OllamaApiClient(endpoint, textModel.DefaultModelId);
 });
 
-// Vector DB: Qdrant
-// builder.Services.AddQdrantVectorStore(config["Qdrant:Host"], int.Parse(config["Qdrant:GrpcPort"]));
-builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:GrpcPort"])));
-builder.Services.AddQdrantVectorStore();
-builder.Services.AddScoped<QdrantDb>();
-
-// Vector DB: InMemory
-builder.Services.AddInMemoryVectorStore();
-builder.Services.AddScoped<InMemoryVectorDb>();
-
-builder.Services.AddSingleton(x =>
+builder.Services.AddEmbeddingGenerator(x =>
 {
     const string ollama = "Ollama";
     var endpoint = config[$"{ollama}:Endpoint"];
@@ -61,6 +35,15 @@ builder.Services.AddSingleton(x =>
 
     return new OllamaEmbeddingGenerator(endpoint, model);
 });
+
+// Vector DB: Qdrant
+builder.Services.AddSingleton(sp => new QdrantClient(config["Qdrant:Host"], int.Parse(config["Qdrant:GrpcPort"])));
+builder.Services.AddQdrantVectorStore();
+builder.Services.AddScoped<QdrantDb>();
+
+// Vector DB: InMemory
+builder.Services.AddInMemoryVectorStore();
+builder.Services.AddScoped<InMemoryVectorDb>();
 
 builder.Services.AddScoped<LlmService>();
 
