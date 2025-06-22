@@ -11,6 +11,8 @@ public class AppInfoController(IConfiguration config, ApiClient api) : Controlle
     private readonly IConfiguration config = config;
     private readonly ApiClient api = api;
 
+    [HttpGet("ok")] public ActionResult IsOk() => Ok();
+
     [HttpGet("get-ai-runtime-info")]
     public async Task<ActionResult<object>> GetAiRuntimeInfo()
     {

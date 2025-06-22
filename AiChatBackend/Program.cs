@@ -33,7 +33,7 @@ builder.Services.AddEmbeddingGenerator(x =>
     var endpoint = config[$"{ollama}:Endpoint"];
     var model = config[$"{ollama}:EmbeddingModel"];
 
-    return new OllamaEmbeddingGenerator(endpoint, model);
+    return new OllamaApiClient(endpoint, model);
 });
 
 // Vector DB: Qdrant
@@ -73,7 +73,7 @@ var app = builder.Build();
 
 app.UseCors();
 
-app.UseSwagger();
+app.UseSwagger(x => x.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi2_0);
 app.UseSwaggerUI();
 
 app.UseAuthorization();
